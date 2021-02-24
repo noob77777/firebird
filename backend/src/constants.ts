@@ -1,7 +1,2 @@
-const constants = {
-  SERVER_PORT: 3000,
-  REDIS_HOST: "127.0.0.1",
-  REDIS_PORT: 6379,
-};
-
-module.exports = constants;
+export const SERVER_PORT: number = 3002;
+export const LOG_FILE: string = "firebird_backend.log";
