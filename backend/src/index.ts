@@ -8,6 +8,7 @@ import {
   SERVER_PORT_HTTPS,
   SSL_CERT_PATH,
   SSL_KEY_PATH,
+  USER_PREFIX,
 } from "./constants";
 
 import auth from "./auth/auth";
@@ -28,7 +29,7 @@ app.get("/", (req, res) => {
 });
 
 app.post("/api/createUser", (req, res) => {
-  const userName = "user." + req.body.userName;
+  const userName = USER_PREFIX + "." + req.body.userName;
   const hash = req.body.hash;
   const publicKey = req.body.publicKey;
   auth.createUser(userName, hash, publicKey, (success) => {
@@ -36,8 +37,37 @@ app.post("/api/createUser", (req, res) => {
       res.status(200);
       res.json({ message: "OK" });
     } else {
-      res.status(503);
-      res.json({ message: "Request Failed" });
+      res.status(401);
+      res.json({ message: "Permission Denied" });
+    }
+  });
+});
+
+app.post("/api/validateUser", (req, res) => {
+  const userName = USER_PREFIX + "." + req.body.userName;
+  const hash = req.body.hash;
+  auth.validateUser(userName, hash, (sessionKey) => {
+    if (sessionKey) {
+      res.status(200);
+      res.json({ message: "OK", sessionKey });
+    } else {
+      res.status(401);
+      res.json({ message: "Permission Denied" });
+    }
+  });
+});
+
+app.post("/api/getPublicKey", (req, res) => {
+  const userName = USER_PREFIX + "." + req.body.userName;
+  const sessionKey = req.body.sessionKey;
+  const user = USER_PREFIX + "." + req.body.user;
+  auth.getPublicKey(userName, sessionKey, user, (publicKey) => {
+    if (publicKey) {
+      res.status(200);
+      res.json({ message: "OK", publicKey });
+    } else {
+      res.status(401);
+      res.json({ message: "Permission Denied" });
     }
   });
 });

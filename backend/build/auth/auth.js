@@ -4,15 +4,18 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 var global_1 = require("../global");
+var constants_1 = require("../constants");
 var crypto_1 = __importDefault(require("crypto"));
-function isUser(o) {
-    return "userName" in o && "hash" in o && "publicKey" in o;
-}
 var createUser = function (userName, hash, publicKey, callback) {
+    if (userName === constants_1.USER_PREFIX + ".") {
+        callback(false);
+        return;
+    }
     var user = {
         userName: userName,
         hash: hash,
         publicKey: publicKey,
+        contacts: [],
     };
     global_1.redisClient.watch(userName, function (errWatch) {
         if (errWatch) {
@@ -30,6 +33,7 @@ var createUser = function (userName, hash, publicKey, callback) {
                 global_1.redisClient
                     .multi()
                     .set(userName, JSON.stringify(user))
+                    .rpush(constants_1.BROADCAST_GROUP, userName)
                     .exec(function (errExec) {
                     if (errExec) {
                         global_1.log.error(errExec.message);
@@ -54,7 +58,7 @@ var validateUser = function (userName, hash, callback) {
         }
         if (result) {
             var user_1 = JSON.parse(result);
-            if (isUser(user_1) && user_1.hash === hash) {
+            if (global_1.isUser(user_1) && user_1.hash === hash) {
                 user_1.sessionKey = generateSessionKey(user_1.userName);
                 global_1.redisClient.set(user_1.userName, JSON.stringify(user_1), function (errSet) {
                     if (errSet) {
@@ -83,7 +87,7 @@ var validateSession = function (userName, sessionKey, callback) {
         }
         if (result) {
             var user = JSON.parse(result);
-            if (isUser(user) && user.sessionKey === sessionKey) {
+            if (global_1.isUser(user) && user.sessionKey === sessionKey) {
                 callback(true);
                 return;
             }
@@ -102,7 +106,7 @@ var getPublicKey = function (userName, sessionKey, user, callback) {
                 }
                 if (result) {
                     var u = JSON.parse(result);
-                    if (isUser(u) && u.publicKey) {
+                    if (global_1.isUser(u) && u.publicKey) {
                         callback(u.publicKey);
                         return;
                     }

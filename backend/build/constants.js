@@ -1,9 +1,14 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.REDIS_PORT = exports.REDIS_HOST = exports.SSL_KEY_PATH = exports.SSL_CERT_PATH = exports.LOG_FILE_PATH = exports.SERVER_PORT = void 0;
-exports.SERVER_PORT = 8443;
+exports.BROADCAST_GROUP = exports.GROUP_PREFIX = exports.USER_PREFIX = exports.QUEUE_SUFFIX = exports.SSL_KEY_PATH = exports.SSL_CERT_PATH = exports.LOG_FILE_PATH = exports.REDIS_PORT = exports.REDIS_HOST = exports.SERVER_PORT_HTTPS = exports.SERVER_PORT_HTTP = void 0;
+exports.SERVER_PORT_HTTP = 8080;
+exports.SERVER_PORT_HTTPS = 8443;
+exports.REDIS_HOST = "127.0.0.1";
+exports.REDIS_PORT = 6379;
 exports.LOG_FILE_PATH = "firebird_backend.log";
 exports.SSL_CERT_PATH = "./certs/firebird.crt";
 exports.SSL_KEY_PATH = "./certs/firebird.key";
-exports.REDIS_HOST = "127.0.0.1";
-exports.REDIS_PORT = 6379;
+exports.QUEUE_SUFFIX = "queue";
+exports.USER_PREFIX = "user";
+exports.GROUP_PREFIX = "group";
+exports.BROADCAST_GROUP = "group.broadcast";

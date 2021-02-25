@@ -20,3 +20,23 @@ export interface User {
 export const isUser = (o: any): o is User => {
   return "userName" in o && "hash" in o && "publicKey" in o && "contacts" in o;
 };
+
+export interface Message {
+  timestamp: number;
+  id: number;
+  type: string;
+  sender: string;
+  receiver: string;
+  body: any;
+}
+
+export const isMessage = (o: any): o is Message => {
+  return (
+    "timestamp" in o &&
+    "id" in o &&
+    "type" in o &&
+    "sender" in o &&
+    "receiver" in o &&
+    "body" in o
+  );
+};

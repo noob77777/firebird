@@ -1,5 +1,5 @@
 import { log, redisClient, User, isUser } from "../global";
-import { BROADCAST_GROUP } from "../constants";
+import { BROADCAST_GROUP, USER_PREFIX } from "../constants";
 import crypto from "crypto";
 
 const createUser = (
@@ -8,12 +8,18 @@ const createUser = (
   publicKey: string,
   callback: (success: boolean) => void
 ): void => {
+  if (userName === USER_PREFIX + ".") {
+    callback(false);
+    return;
+  }
+
   const user: User = {
     userName,
     hash,
     publicKey,
     contacts: [],
   };
+
   redisClient.watch(userName, (errWatch) => {
     if (errWatch) {
       log.error(errWatch.message);
