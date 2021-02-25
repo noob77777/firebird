@@ -4,13 +4,21 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 var express_1 = __importDefault(require("express"));
-var simple_node_logger_1 = __importDefault(require("simple-node-logger"));
+var https_1 = __importDefault(require("https"));
+var fs_1 = __importDefault(require("fs"));
+var global_1 = require("./global");
 var constants_1 = require("./constants");
+var key = fs_1.default.readFileSync(constants_1.SSL_KEY_PATH);
+var cert = fs_1.default.readFileSync(constants_1.SSL_CERT_PATH);
+var options = {
+    key: key,
+    cert: cert,
+};
 var app = express_1.default();
-var log = simple_node_logger_1.default.createSimpleFileLogger(constants_1.LOG_FILE);
 app.get("/", function (req, res) {
     res.send("Hello World");
 });
-app.listen(constants_1.SERVER_PORT, function () {
-    log.info("Example app listening at http://localhost:" + constants_1.SERVER_PORT);
+var server = https_1.default.createServer(options, app);
+server.listen(constants_1.SERVER_PORT, function () {
+    global_1.log.info("Example app listening at https://localhost:" + constants_1.SERVER_PORT);
 });
