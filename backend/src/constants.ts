@@ -7,7 +7,12 @@ export const LOG_FILE_PATH: string = "firebird_backend.log";
 export const SSL_CERT_PATH: string = "./certs/firebird.crt";
 export const SSL_KEY_PATH: string = "./certs/firebird.key";
 
-export const QUEUE_SUFFIX: string = "queue";
 export const USER_PREFIX: string = "user";
 export const GROUP_PREFIX: string = "group";
 export const BROADCAST_GROUP: string = "group.broadcast";
+export const SOCKET_INDEX_SUFFIX: string = "socket";
+export const QUEUE_SUFFIX: string = "queue";
+
+export const NEW_CONNECTION: string = "new_connection";
+export const SEND_MESSAGE: string = "send_message";
+export const RECV_MESSAGE: string = "recv_message";

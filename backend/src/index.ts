@@ -1,26 +1,22 @@
 import express from "express";
-import http from "http";
-import https from "https";
-import fs from "fs";
-import { log } from "./global";
 import {
+  log,
+  app,
+  serverHTTP,
+  serverHTTPS,
+  io,
+  isUser,
+  isMessage,
+} from "./global";
+import {
+  NEW_CONNECTION,
+  SEND_MESSAGE,
   SERVER_PORT_HTTP,
   SERVER_PORT_HTTPS,
-  SSL_CERT_PATH,
-  SSL_KEY_PATH,
-  USER_PREFIX,
 } from "./constants";
-
 import auth from "./auth/auth";
+import messenger from "./messenger/messenger";
 
-const key = fs.readFileSync(SSL_KEY_PATH);
-const cert = fs.readFileSync(SSL_CERT_PATH);
-const options = {
-  key,
-  cert,
-};
-
-const app = express();
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 
@@ -29,7 +25,7 @@ app.get("/", (req, res) => {
 });
 
 app.post("/api/createUser", (req, res) => {
-  const userName = USER_PREFIX + "." + req.body.userName;
+  const userName = req.body.userName;
   const hash = req.body.hash;
   const publicKey = req.body.publicKey;
   auth.createUser(userName, hash, publicKey, (success) => {
@@ -44,7 +40,7 @@ app.post("/api/createUser", (req, res) => {
 });
 
 app.post("/api/validateUser", (req, res) => {
-  const userName = USER_PREFIX + "." + req.body.userName;
+  const userName = req.body.userName;
   const hash = req.body.hash;
   auth.validateUser(userName, hash, (sessionKey) => {
     if (sessionKey) {
@@ -58,9 +54,9 @@ app.post("/api/validateUser", (req, res) => {
 });
 
 app.post("/api/getPublicKey", (req, res) => {
-  const userName = USER_PREFIX + "." + req.body.userName;
+  const userName = req.body.userName;
   const sessionKey = req.body.sessionKey;
-  const user = USER_PREFIX + "." + req.body.user;
+  const user = req.body.user;
   auth.getPublicKey(userName, sessionKey, user, (publicKey) => {
     if (publicKey) {
       res.status(200);
@@ -72,8 +68,39 @@ app.post("/api/getPublicKey", (req, res) => {
   });
 });
 
-const serverHTTP = http.createServer(app);
-const serverHTTPS = https.createServer(options, app);
+io.attach(serverHTTP);
+io.attach(serverHTTPS);
+
+io.on("connection", (client) => {
+  client.on(NEW_CONNECTION, (user: any) => {
+    user = JSON.parse(user);
+    if ("userName" in user && "sessionKey" in user) {
+      messenger.addClient(user.userName, user.sessionKey, client.id);
+    }
+  });
+  client.on("disconnect", () => {
+    messenger.removeClient(client.id);
+  });
+  client.on(SEND_MESSAGE, (data: any) => {
+    data = JSON.parse(data);
+    if (
+      "userName" in data &&
+      "sessionKey" in data &&
+      "message" in data &&
+      isMessage(data.message)
+    ) {
+      messenger.sendMessage(
+        data.userName,
+        data.sessionKey,
+        data.message,
+        (success) => {
+          return;
+        }
+      );
+    }
+  });
+});
+
 serverHTTP.listen(SERVER_PORT_HTTP, () => {
   log.info(`Example app listening at http://localhost:${SERVER_PORT_HTTP}`);
 });

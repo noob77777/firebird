@@ -1,18 +1,32 @@
 import { log, redisClient, User, isUser } from "../global";
-import { BROADCAST_GROUP, USER_PREFIX } from "../constants";
+import { BROADCAST_GROUP } from "../constants";
 import crypto from "crypto";
 
+class SessionStore {
+  sessions: { [key: string]: string } = {};
+  public addSession = (userName: string, sessionKey: string): void => {
+    this.sessions[userName] = sessionKey;
+  };
+  public getSession = (userName: string): string => {
+    return this.sessions[userName];
+  };
+}
+
+const sessionStore: SessionStore = new SessionStore();
+
+/**
+ * [secure]
+ * @param userName
+ * @param hash
+ * @param publicKey
+ * @param callback
+ */
 const createUser = (
   userName: string,
   hash: string,
   publicKey: string,
   callback: (success: boolean) => void
 ): void => {
-  if (userName === USER_PREFIX + ".") {
-    callback(false);
-    return;
-  }
-
   const user: User = {
     userName,
     hash,
@@ -52,29 +66,29 @@ const createUser = (
   });
 };
 
+/**
+ * [secure]
+ * @param userName
+ * @param hash
+ * @param callback
+ */
 const validateUser = (
   userName: string,
   hash: string,
   callback: (sessionKey: string | null) => void
 ): void => {
-  redisClient.get(userName, (errGet, result) => {
-    if (errGet) {
-      log.error(errGet.message);
+  redisClient.get(userName, (err, result) => {
+    if (err) {
+      log.error(err.message);
       callback(null);
       return;
     }
     if (result) {
       const user = JSON.parse(result);
       if (isUser(user) && user.hash === hash) {
-        user.sessionKey = generateSessionKey(user.userName);
-        redisClient.set(user.userName, JSON.stringify(user), (errSet) => {
-          if (errSet) {
-            log.error(errSet.message);
-            callback(null);
-            return;
-          }
-          callback(user.sessionKey ? user.sessionKey : null);
-        });
+        const sessionKey = generateSessionKey(userName);
+        sessionStore.addSession(userName, sessionKey);
+        callback(sessionKey);
       } else {
         callback(null);
       }
@@ -84,28 +98,31 @@ const validateUser = (
   });
 };
 
+/**
+ * [secure]
+ * @param userName
+ * @param sessionKey
+ * @param callback
+ */
 const validateSession = (
   userName: string,
   sessionKey: string,
   callback: (success: boolean) => void
 ): void => {
-  redisClient.get(userName, (err, result) => {
-    if (err) {
-      log.error(err.message);
-      callback(false);
-      return;
-    }
-    if (result) {
-      const user = JSON.parse(result);
-      if (isUser(user) && user.sessionKey === sessionKey) {
-        callback(true);
-        return;
-      }
-    }
+  if (sessionStore.getSession(userName) === sessionKey) {
+    callback(true);
+  } else {
     callback(false);
-  });
+  }
 };
 
+/**
+ * [secure]
+ * @param userName
+ * @param sessionKey
+ * @param user
+ * @param callback
+ */
 const getPublicKey = (
   userName: string,
   sessionKey: string,
@@ -135,6 +152,33 @@ const getPublicKey = (
   });
 };
 
+/**
+ * @param userName
+ * @param callback
+ */
+const userExists = (
+  userName: string,
+  callback: (exists: boolean) => void
+): void => {
+  redisClient.get(userName, (err, result) => {
+    if (err) {
+      log.error(err.message);
+      callback(false);
+      return;
+    }
+    if (!result) {
+      callback(false);
+      return;
+    }
+    const u = JSON.parse(result);
+    if (u && isUser(u)) {
+      callback(true);
+      return;
+    }
+    callback(false);
+  });
+};
+
 const generateSessionKey = (userName: string): string => {
   const key = userName + "." + Date.now().toString();
   return crypto.createHash("sha256").update(key).digest("hex");
@@ -145,6 +189,7 @@ const auth = {
   validateUser,
   validateSession,
   getPublicKey,
+  userExists,
 };
 
 export default auth;
