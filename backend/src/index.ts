@@ -1,18 +1,11 @@
 import express from "express";
-import {
-  log,
-  app,
-  serverHTTP,
-  serverHTTPS,
-  io,
-  isUser,
-  isMessage,
-} from "./global";
+import { log, app, serverHTTP, serverHTTPS, io, isMessage } from "./global";
 import {
   NEW_CONNECTION,
   SEND_MESSAGE,
   SERVER_PORT_HTTP,
   SERVER_PORT_HTTPS,
+  USER_PREFIX,
 } from "./constants";
 import auth from "./auth/auth";
 import messenger from "./messenger/messenger";
@@ -28,65 +21,114 @@ app.post("/api/createUser", (req, res) => {
   const userName = req.body.userName;
   const hash = req.body.hash;
   const publicKey = req.body.publicKey;
-  auth.createUser(userName, hash, publicKey, (success) => {
-    if (success) {
-      res.status(200);
-      res.json({ message: "OK" });
-    } else {
-      res.status(401);
-      res.json({ message: "Permission Denied" });
-    }
-  });
+  if (
+    typeof userName === "string" &&
+    typeof hash === "string" &&
+    typeof publicKey === "string" &&
+    userName.startsWith(USER_PREFIX + ".")
+  ) {
+    auth.createUser(userName, hash, publicKey, (success) => {
+      if (success) {
+        res.status(200);
+        res.json({ message: "OK" });
+      } else {
+        res.status(401);
+        res.json({ message: "Permission Denied" });
+      }
+    });
+  } else {
+    res.status(400);
+    res.json({ message: "Invalid Arguments" });
+  }
 });
 
 app.post("/api/validateUser", (req, res) => {
   const userName = req.body.userName;
   const hash = req.body.hash;
-  auth.validateUser(userName, hash, (sessionKey) => {
-    if (sessionKey) {
-      res.status(200);
-      res.json({ message: "OK", sessionKey });
-    } else {
-      res.status(401);
-      res.json({ message: "Permission Denied" });
-    }
-  });
+  if (typeof userName === "string" && typeof hash === "string") {
+    auth.validateUser(userName, hash, (sessionKey) => {
+      if (sessionKey) {
+        res.status(200);
+        res.json({ message: "OK", sessionKey });
+      } else {
+        res.status(401);
+        res.json({ message: "Permission Denied" });
+      }
+    });
+  } else {
+    res.status(400);
+    res.json({ message: "Invalid Arguments" });
+  }
 });
 
 app.post("/api/getPublicKey", (req, res) => {
   const userName = req.body.userName;
   const sessionKey = req.body.sessionKey;
   const user = req.body.user;
-  auth.getPublicKey(userName, sessionKey, user, (publicKey) => {
-    if (publicKey) {
-      res.status(200);
-      res.json({ message: "OK", publicKey });
-    } else {
-      res.status(401);
-      res.json({ message: "Permission Denied" });
-    }
-  });
+  if (
+    typeof userName === "string" &&
+    typeof sessionKey === "string" &&
+    typeof user === "string"
+  ) {
+    auth.getPublicKey(userName, sessionKey, user, (publicKey) => {
+      if (publicKey) {
+        res.status(200);
+        res.json({ message: "OK", publicKey });
+      } else {
+        res.status(401);
+        res.json({ message: "Permission Denied" });
+      }
+    });
+  } else {
+    res.status(400);
+    res.json({ message: "Invalid Arguments" });
+  }
+});
+
+app.post("/api/getPendingMessages", (req, res) => {
+  const userName = req.body.userName;
+  const sessionKey = req.body.sessionKey;
+  if (typeof userName === "string" && typeof sessionKey === "string") {
+    messenger.pendingMessages(userName, sessionKey, (messageList) => {
+      if (messageList) {
+        res.status(200);
+        res.json({ message: "OK", messageList });
+      } else {
+        res.status(401);
+        res.json({ message: "Permission Denied" });
+      }
+    });
+  } else {
+    res.status(400);
+    res.json({ message: "Invalid Arguments" });
+  }
 });
 
 io.attach(serverHTTP);
 io.attach(serverHTTPS);
 
 io.on("connection", (client) => {
-  client.on(NEW_CONNECTION, (user: any) => {
-    user = JSON.parse(user);
-    if ("userName" in user && "sessionKey" in user) {
-      messenger.addClient(user.userName, user.sessionKey, client.id);
+  client.on(NEW_CONNECTION, (data: any) => {
+    data = JSON.parse(data);
+    if (
+      data &&
+      typeof data.userName === "string" &&
+      typeof data.sessionKey === "string"
+    ) {
+      messenger.addClient(data.userName, data.sessionKey, client.id);
     }
   });
+
   client.on("disconnect", () => {
     messenger.removeClient(client.id);
   });
+
   client.on(SEND_MESSAGE, (data: any) => {
     data = JSON.parse(data);
     if (
-      "userName" in data &&
-      "sessionKey" in data &&
-      "message" in data &&
+      data &&
+      typeof data.userName === "string" &&
+      typeof data.sessionKey === "string" &&
       isMessage(data.message)
     ) {
       messenger.sendMessage(
@@ -94,7 +136,7 @@ io.on("connection", (client) => {
         data.sessionKey,
         data.message,
         (success) => {
-          return;
+          messenger.sendAck(data.userName, data.message.id, success);
         }
       );
     }
@@ -102,8 +144,8 @@ io.on("connection", (client) => {
 });
 
 serverHTTP.listen(SERVER_PORT_HTTP, () => {
-  log.info(`Example app listening at http://localhost:${SERVER_PORT_HTTP}`);
+  log.info(`firebird listening at http://localhost:${SERVER_PORT_HTTP}`);
 });
 serverHTTPS.listen(SERVER_PORT_HTTPS, () => {
-  log.info(`Example app listening at https://localhost:${SERVER_PORT_HTTPS}`);
+  log.info(`firebird listening at https://localhost:${SERVER_PORT_HTTPS}`);
 });

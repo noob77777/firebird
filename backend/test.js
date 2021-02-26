@@ -1,15 +1,19 @@
 const axios = require("axios");
+const crypto = require("crypto");
 const io = require("socket.io-client");
 const socket = io("http://localhost:8080");
 
 socket.on("recv_message", (data) => {
-  console.log(data);
+  console.log("recv_message: " + data);
 });
 
-const key1 = "e7d8d1dc3e7896c8992a49ec57861d0b8aca03c80b85ac30e782533a4f4598ca";
-const key2 = "a14ee0b459280822e805b78ff305d70dcc0171f1606caecf576203bd997b11b3";
+socket.on("ack_message", (data) => {
+  console.log("ack_message: " + data);
+});
+
 const u1 = { userName: "user.u1", hash: "hash", publicKey: "key" };
 const u2 = { userName: "user.u2", hash: "hash", publicKey: "key" };
+const u_failed = { userName: "u1", hash: "hash", publicKey: "key" };
 
 const testCreateUser = (u) => {
   axios.post("http://localhost:8080/api/createUser", u).then((res) => {
@@ -17,11 +21,17 @@ const testCreateUser = (u) => {
   });
 };
 
-const testGetPublicKey = () => {
+const testValidateUser = (u) => {
+  axios.post("http://localhost:8080/api/validateUser", u).then((res) => {
+    console.log(res.data);
+  });
+};
+
+const testGetPublicKey = (userName, key) => {
   axios
     .post("http://localhost:8080/api/getPublicKey", {
-      userName: "user.u1",
-      sessionKey: key1,
+      userName: userName,
+      sessionKey: key,
       user: "u2",
     })
     .then((res) => {
@@ -29,30 +39,53 @@ const testGetPublicKey = () => {
     });
 };
 
-const testSocketConnect = (u, key) => {
+const testGetPendingMessages = (userName, key) => {
+  axios
+    .post("http://localhost:8080/api/getPendingMessages", {
+      userName: userName,
+      sessionKey: key,
+    })
+    .then((res) => {
+      console.log(res.data);
+    });
+};
+
+const testSocketConnect = (userName, key) => {
   socket.emit(
     "new_connection",
-    JSON.stringify({ userName: u, sessionKey: key })
+    JSON.stringify({ userName: userName, sessionKey: key })
   );
+  const timestamp = Date.now();
   const message = {
-    timestamp: 1,
-    id: 1,
+    timestamp: timestamp,
+    id: crypto
+      .createHash("sha256")
+      .update(timestamp + "." + userName)
+      .digest("hex"),
     type: "text",
-    sender: u,
+    sender: userName,
     receiver: "user.u2",
     body: "Hello",
   };
+  console.log("send_message: " + JSON.stringify(message));
   socket.emit(
     "send_message",
-    JSON.stringify({ userName: u, sessionKey: key, message: message })
+    JSON.stringify({ userName: userName, sessionKey: key, message: message })
   );
 };
 
-const testValidateUser = (u) => {
+const runTest = (userName, hash, test) => {
+  const u = { userName, hash };
   axios.post("http://localhost:8080/api/validateUser", u).then((res) => {
-    testSocketConnect(u.userName, res.data.sessionKey);
+    test(u.userName, res.data.sessionKey);
   });
 };
 
-testValidateUser(u2);
-testValidateUser(u1);
+// runTest("user.u1", "hash", testGetPendingMessages);
+// runTest("user.u2", "hash", testGetPendingMessages);
+runTest("user.u2", "hash", testSocketConnect);
+runTest("user.u1", "hash", testSocketConnect);
+
+// for (let i = 0; i < 5; ++i) {
+//   runTest("user.u1", "hash", testSocketConnect);
+// }

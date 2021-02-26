@@ -1,5 +1,11 @@
 import { log, redisClient, Message, isMessage, io } from "../global";
-import { QUEUE_SUFFIX, RECV_MESSAGE } from "../constants";
+import {
+  ACK_MESSAGE,
+  QUEUE_SUFFIX,
+  RECV_MESSAGE,
+  TYPE_ACK,
+  USER_SERVER,
+} from "../constants";
 import auth from "../auth/auth";
 
 class MessengerState {
@@ -147,5 +153,44 @@ const sendMessage = (
   });
 };
 
-const messenger = { pendingMessages, sendMessage, addClient, removeClient };
+/**
+ * @param userName
+ * @param messageId
+ * @param success
+ */
+const sendAck = (
+  userName: string,
+  messageId: string,
+  success: boolean
+): void => {
+  const ack: Message = {
+    timestamp: Date.now(),
+    id: messageId,
+    type: TYPE_ACK,
+    sender: USER_SERVER,
+    receiver: userName,
+    body: success,
+  };
+  const client = messengerState.getSocket(userName);
+  if (client) {
+    io.to(client).emit(ACK_MESSAGE, JSON.stringify(ack));
+  } else {
+    if (success) {
+      log.warn(`ack dropped for for user: ${userName} with id: ${messageId}`);
+    } else {
+      log.warn(
+        `both ack and message delivery failed for user: ${userName} with id: ${messageId}`
+      );
+    }
+  }
+};
+
+const messenger = {
+  pendingMessages,
+  sendMessage,
+  sendAck,
+  addClient,
+  removeClient,
+};
+
 export default messenger;

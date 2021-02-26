@@ -134,5 +134,38 @@ var sendMessage = function (userName, sessionKey, message, callback) {
         }
     });
 };
-var messenger = { pendingMessages: pendingMessages, sendMessage: sendMessage, addClient: addClient, removeClient: removeClient };
+/**
+ * @param userName
+ * @param messageId
+ * @param success
+ */
+var sendAck = function (userName, messageId, success) {
+    var ack = {
+        timestamp: Date.now(),
+        id: messageId,
+        type: constants_1.TYPE_ACK,
+        sender: constants_1.USER_SERVER,
+        receiver: userName,
+        body: success,
+    };
+    var client = messengerState.getSocket(userName);
+    if (client) {
+        global_1.io.to(client).emit(constants_1.ACK_MESSAGE, JSON.stringify(ack));
+    }
+    else {
+        if (success) {
+            global_1.log.warn("ack dropped for for user: " + userName + " with id: " + messageId);
+        }
+        else {
+            global_1.log.warn("both ack and message delivery failed for user: " + userName + " with id: " + messageId);
+        }
+    }
+};
+var messenger = {
+    pendingMessages: pendingMessages,
+    sendMessage: sendMessage,
+    sendAck: sendAck,
+    addClient: addClient,
+    removeClient: removeClient,
+};
 exports.default = messenger;

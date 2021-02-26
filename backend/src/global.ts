@@ -44,7 +44,7 @@ export const isUser = (o: any): o is User => {
 
 export interface Message {
   timestamp: number;
-  id: number;
+  id: string;
   type: string;
   sender: string;
   receiver: string;
