@@ -12,7 +12,13 @@ var GarbageCollector_1 = __importDefault(require("./GarbageCollector/GarbageColl
 global_1.app.use(express_1.default.urlencoded({ extended: true }));
 global_1.app.use(express_1.default.json());
 global_1.app.get("/", function (req, res) {
-    res.send("WELCOME TO FIREBIRD API");
+    var userAgent = req.headers["user-agent"];
+    if (userAgent) {
+        res.send("WELCOME TO FIREBIRD API: " + userAgent);
+    }
+    else {
+        res.send("WELCOME TO FIREBIRD API");
+    }
 });
 global_1.app.post("/api/createUser", function (req, res) {
     var userName = req.body.userName;

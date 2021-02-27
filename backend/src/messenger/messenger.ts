@@ -243,7 +243,7 @@ const sendMessage = (
           if (users && users.includes(userName)) {
             users.forEach((receiver) => {
               if (receiver !== userName) {
-                sendMessageSingleUser(receiver, message, (trash) => {
+                sendMessageSingleUser(receiver, message, () => {
                   return;
                 });
               }

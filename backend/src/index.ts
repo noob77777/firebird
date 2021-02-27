@@ -16,7 +16,12 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 
 app.get("/", (req, res) => {
-  res.send("WELCOME TO FIREBIRD API");
+  const userAgent = req.headers["user-agent"];
+  if (userAgent) {
+    res.send(`WELCOME TO FIREBIRD API: ${userAgent}`);
+  } else {
+    res.send(`WELCOME TO FIREBIRD API`);
+  }
 });
 
 app.post("/api/createUser", (req, res) => {

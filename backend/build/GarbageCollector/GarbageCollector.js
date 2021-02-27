@@ -2,7 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 var constants_1 = require("../constants");
 var global_1 = require("../global");
-var GarbageCollector = /** @class */ (function () {
+var GarbageCollector = (function () {
     function GarbageCollector() {
         var _this = this;
         this.runGarbageCollector = function () {

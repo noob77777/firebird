@@ -6,7 +6,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 var global_1 = require("../global");
 var constants_1 = require("../constants");
 var auth_1 = __importDefault(require("../auth/auth"));
-var MessengerState = /** @class */ (function () {
+var MessengerState = (function () {
     function MessengerState() {
         var _this = this;
         this.socketStore = {};
@@ -41,12 +41,6 @@ var MessengerState = /** @class */ (function () {
     return MessengerState;
 }());
 var messengerState = new MessengerState();
-/**
- * [secure]
- * @param userName
- * @param sessionKey
- * @param socketID
- */
 var addClient = function (userName, sessionKey, socketID) {
     auth_1.default.validateSession(userName, sessionKey, function (success) {
         if (success) {
@@ -55,16 +49,10 @@ var addClient = function (userName, sessionKey, socketID) {
         }
     });
 };
-/**
- * @param socketID
- */
 var getClient = function (socketID) {
     var userName = messengerState.getUser(socketID);
     return userName;
 };
-/**
- * @param socketID
- */
 var removeClient = function (socketID) {
     var userName = messengerState.getUser(socketID);
     messengerState.removeSocket(socketID);
@@ -72,12 +60,6 @@ var removeClient = function (socketID) {
         global_1.io.sockets.emit(constants_1.USER_STATE_CHANGE, JSON.stringify({ userName: userName, active: false }));
     }
 };
-/**
- * [secure] [redis]
- * @param userName
- * @param sessionKey
- * @param callback
- */
 var pendingMessages = function (userName, sessionKey, callback) {
     auth_1.default.validateSession(userName, sessionKey, function (success) {
         var queueName = userName + constants_1.QUEUE_SUFFIX;
@@ -131,11 +113,6 @@ var enQueueMessage = function (receiver, message, callback) {
         }
     });
 };
-/**
- * @param userName
- * @param messageId
- * @param success
- */
 var sendAck = function (userName, messageId, success) {
     var ack = {
         timestamp: Date.now(),
@@ -182,13 +159,6 @@ var sendMessageSingleUser = function (receiver, message, callback) {
         enQueueMessage(receiver, message, callback);
     }
 };
-/**
- * [secure] [redis]
- * @param userName
- * @param sessionKey
- * @param message
- * @param callback
- */
 var sendMessage = function (userName, sessionKey, message, callback) {
     if (userName !== message.sender) {
         callback(false);
@@ -201,7 +171,7 @@ var sendMessage = function (userName, sessionKey, message, callback) {
                     if (users && users.includes(userName)) {
                         users.forEach(function (receiver) {
                             if (receiver !== userName) {
-                                sendMessageSingleUser(receiver, message, function (trash) {
+                                sendMessageSingleUser(receiver, message, function () {
                                     return;
                                 });
                             }
