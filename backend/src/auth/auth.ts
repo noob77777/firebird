@@ -40,24 +40,24 @@ const createUser = (
       callback(false);
       return;
     }
-    redisClient.get(userName, (errGet, result) => {
+    redisClient.get(userName, (errGet, resultGet) => {
       if (errGet) {
         log.error(errGet.message);
         callback(false);
         return;
       }
-      if (!result) {
+      if (!resultGet) {
         redisClient
           .multi()
           .set(userName, JSON.stringify(user))
           .rpush(BROADCAST_GROUP, userName)
-          .exec((errExec) => {
+          .exec((errExec, resultExec) => {
             if (errExec) {
               log.error(errExec.message);
               callback(false);
               return;
             }
-            callback(true);
+            callback(resultExec ? true : false);
           });
       } else {
         callback(false);
@@ -205,23 +205,23 @@ const createGroup = (
           callback(false);
           return;
         }
-        redisClient.lrange(groupName, 0, -1, (errLRange, result) => {
+        redisClient.lrange(groupName, 0, -1, (errLRange, resultLRange) => {
           if (errLRange) {
             log.error(errLRange.message);
             callback(false);
             return;
           }
-          if (result.length === 0) {
+          if (resultLRange.length === 0) {
             redisClient
               .multi()
               .rpush(groupName, userName)
-              .exec((errExec) => {
+              .exec((errExec, resultExec) => {
                 if (errExec) {
                   log.error(errExec.message);
                   callback(false);
                   return;
                 }
-                callback(true);
+                callback(resultExec ? true : false);
               });
           } else {
             callback(false);

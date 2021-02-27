@@ -83,7 +83,7 @@ const testGetGroupMembers = (userName, key) => {
     .post("http://localhost:8080/api/getGroupMembers", {
       userName: userName,
       sessionKey: key,
-      groupName: "group.testgroup2",
+      groupName: "group.broadcast",
     })
     .then((res) => {
       console.log(res.data);

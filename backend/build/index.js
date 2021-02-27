@@ -11,7 +11,7 @@ var messenger_1 = __importDefault(require("./messenger/messenger"));
 global_1.app.use(express_1.default.urlencoded({ extended: true }));
 global_1.app.use(express_1.default.json());
 global_1.app.get("/", function (req, res) {
-    res.send("Hello!!!");
+    res.send("firebird api");
 });
 global_1.app.post("/api/createUser", function (req, res) {
     var userName = req.body.userName;

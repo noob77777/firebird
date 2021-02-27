@@ -40,24 +40,24 @@ var createUser = function (userName, hash, publicKey, callback) {
             callback(false);
             return;
         }
-        global_1.redisClient.get(userName, function (errGet, result) {
+        global_1.redisClient.get(userName, function (errGet, resultGet) {
             if (errGet) {
                 global_1.log.error(errGet.message);
                 callback(false);
                 return;
             }
-            if (!result) {
+            if (!resultGet) {
                 global_1.redisClient
                     .multi()
                     .set(userName, JSON.stringify(user))
                     .rpush(constants_1.BROADCAST_GROUP, userName)
-                    .exec(function (errExec) {
+                    .exec(function (errExec, resultExec) {
                     if (errExec) {
                         global_1.log.error(errExec.message);
                         callback(false);
                         return;
                     }
-                    callback(true);
+                    callback(resultExec ? true : false);
                 });
             }
             else {
@@ -183,23 +183,23 @@ var createGroup = function (userName, sessionKey, groupName, callback) {
                     callback(false);
                     return;
                 }
-                global_1.redisClient.lrange(groupName, 0, -1, function (errLRange, result) {
+                global_1.redisClient.lrange(groupName, 0, -1, function (errLRange, resultLRange) {
                     if (errLRange) {
                         global_1.log.error(errLRange.message);
                         callback(false);
                         return;
                     }
-                    if (result.length === 0) {
+                    if (resultLRange.length === 0) {
                         global_1.redisClient
                             .multi()
                             .rpush(groupName, userName)
-                            .exec(function (errExec) {
+                            .exec(function (errExec, resultExec) {
                             if (errExec) {
                                 global_1.log.error(errExec.message);
                                 callback(false);
                                 return;
                             }
-                            callback(true);
+                            callback(resultExec ? true : false);
                         });
                     }
                     else {
