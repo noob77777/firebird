@@ -12,14 +12,24 @@ var SessionStore = /** @class */ (function () {
         this.sessions = {};
         this.addSession = function (userName, sessionKey) {
             _this.sessions[userName] = sessionKey;
+            setTimeout(function () { return removeSession(userName); }, constants_1.SESSION_AUTO_TIMEOUT);
         };
         this.getSession = function (userName) {
             return _this.sessions[userName];
+        };
+        this.removeSession = function (userName) {
+            delete _this.sessions[userName];
         };
     }
     return SessionStore;
 }());
 var sessionStore = new SessionStore();
+/**
+ * @param userName
+ */
+var removeSession = function (userName) {
+    sessionStore.removeSession(userName);
+};
 /**
  * [secure] [redis] [atomic]
  * @param userName
@@ -287,5 +297,6 @@ var auth = {
     createGroup: createGroup,
     getGroupMembers: getGroupMembers,
     joinGroup: joinGroup,
+    removeSession: removeSession,
 };
 exports.default = auth;

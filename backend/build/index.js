@@ -8,10 +8,11 @@ var global_1 = require("./global");
 var constants_1 = require("./constants");
 var auth_1 = __importDefault(require("./auth/auth"));
 var messenger_1 = __importDefault(require("./messenger/messenger"));
+var GarbageCollector_1 = __importDefault(require("./GarbageCollector/GarbageCollector"));
 global_1.app.use(express_1.default.urlencoded({ extended: true }));
 global_1.app.use(express_1.default.json());
 global_1.app.get("/", function (req, res) {
-    res.send("firebird api");
+    res.send("WELCOME TO FIREBIRD API");
 });
 global_1.app.post("/api/createUser", function (req, res) {
     var userName = req.body.userName;
@@ -57,10 +58,10 @@ global_1.app.post("/api/validateUser", function (req, res) {
         res.json({ message: "Invalid Arguments" });
     }
 });
-global_1.app.post("/api/getPublicKey", function (req, res) {
-    var userName = req.body.userName;
-    var sessionKey = req.body.sessionKey;
-    var user = req.body.user;
+global_1.app.get("/api/publicKey", function (req, res) {
+    var userName = req.query.userName;
+    var sessionKey = req.query.sessionKey;
+    var user = req.query.user;
     if (typeof userName === "string" &&
         typeof sessionKey === "string" &&
         typeof user === "string") {
@@ -80,9 +81,9 @@ global_1.app.post("/api/getPublicKey", function (req, res) {
         res.json({ message: "Invalid Arguments" });
     }
 });
-global_1.app.post("/api/getPendingMessages", function (req, res) {
-    var userName = req.body.userName;
-    var sessionKey = req.body.sessionKey;
+global_1.app.get("/api/pendingMessages", function (req, res) {
+    var userName = req.query.userName;
+    var sessionKey = req.query.sessionKey;
     if (typeof userName === "string" && typeof sessionKey === "string") {
         messenger_1.default.pendingMessages(userName, sessionKey, function (messageList) {
             if (messageList) {
@@ -124,10 +125,10 @@ global_1.app.post("/api/createGroup", function (req, res) {
         res.json({ message: "Invalid Arguments" });
     }
 });
-global_1.app.post("/api/getGroupMembers", function (req, res) {
-    var userName = req.body.userName;
-    var sessionKey = req.body.sessionKey;
-    var groupName = req.body.groupName;
+global_1.app.get("/api/groupMembers", function (req, res) {
+    var userName = req.query.userName;
+    var sessionKey = req.query.sessionKey;
+    var groupName = req.query.groupName;
     if (typeof userName === "string" &&
         typeof sessionKey === "string" &&
         typeof groupName === "string") {
@@ -182,7 +183,11 @@ global_1.io.on("connection", function (client) {
         }
     });
     client.on("disconnect", function () {
+        var userName = messenger_1.default.getClient(client.id);
         messenger_1.default.removeClient(client.id);
+        if (userName) {
+            auth_1.default.removeSession(userName);
+        }
     });
     client.on(constants_1.SEND_MESSAGE, function (data) {
         data = JSON.parse(data);
@@ -202,3 +207,4 @@ global_1.serverHTTP.listen(constants_1.SERVER_PORT_HTTP, function () {
 global_1.serverHTTPS.listen(constants_1.SERVER_PORT_HTTPS, function () {
     global_1.log.info("firebird listening at https://localhost:" + constants_1.SERVER_PORT_HTTPS);
 });
+GarbageCollector_1.default.start();

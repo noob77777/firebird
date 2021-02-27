@@ -1,18 +1,29 @@
 import { log, redisClient, User, isUser } from "../global";
-import { BROADCAST_GROUP, LOG_FILE_PATH } from "../constants";
+import { BROADCAST_GROUP, SESSION_AUTO_TIMEOUT } from "../constants";
 import crypto from "crypto";
 
 class SessionStore {
   sessions: { [key: string]: string } = {};
   public addSession = (userName: string, sessionKey: string): void => {
     this.sessions[userName] = sessionKey;
+    setTimeout(() => removeSession(userName), SESSION_AUTO_TIMEOUT);
   };
   public getSession = (userName: string): string => {
     return this.sessions[userName];
   };
+  public removeSession = (userName: string): void => {
+    delete this.sessions[userName];
+  };
 }
 
 const sessionStore: SessionStore = new SessionStore();
+
+/**
+ * @param userName
+ */
+const removeSession = (userName: string): void => {
+  sessionStore.removeSession(userName);
+};
 
 /**
  * [secure] [redis] [atomic]
@@ -316,6 +327,7 @@ const auth = {
   createGroup,
   getGroupMembers,
   joinGroup,
+  removeSession,
 };
 
 export default auth;

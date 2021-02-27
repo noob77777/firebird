@@ -22,3 +22,7 @@ export const USER_STATE_CHANGE: string = "user_state_change";
 export const TYPE_TEXT: string = "text";
 export const TYPE_ACK: string = "ack";
 export const TYPE_IMAGE: string = "image";
+
+export const SESSION_AUTO_TIMEOUT: number = 60 * 60 * 1000; // 1 Hr
+export const GARBAGE_COLLECTOR_RUN_INTERVAL: number = 23 * 60 * 60 * 1000; // 23 Hrs
+export const GARBAGE_COLLECTOR_MAX_AGE: number = 24 * 60 * 60 * 1000; // 24 Hrs

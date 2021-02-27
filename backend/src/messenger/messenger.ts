@@ -68,6 +68,14 @@ const addClient = (
 /**
  * @param socketID
  */
+const getClient = (socketID: string): string | null => {
+  const userName = messengerState.getUser(socketID);
+  return userName;
+};
+
+/**
+ * @param socketID
+ */
 const removeClient = (socketID: string): void => {
   const userName = messengerState.getUser(socketID);
   messengerState.removeSocket(socketID);
@@ -93,19 +101,30 @@ const pendingMessages = (
   auth.validateSession(userName, sessionKey, (success) => {
     const queueName = userName + QUEUE_SUFFIX;
     if (success) {
-      redisClient.lrange(queueName, 0, -1, (errLRange, result) => {
-        if (errLRange) {
-          log.error(errLRange.message);
+      redisClient.watch(queueName, (errWatch) => {
+        if (errWatch) {
+          log.error(errWatch);
           callback(null);
           return;
         }
-        const ret = result.map((x) => JSON.parse(x)).filter(isMessage);
-        redisClient.ltrim(queueName, ret.length, -1, (errLTrim) => {
-          if (errLTrim) {
-            log.error(errLTrim.message);
+        redisClient.lrange(queueName, 0, -1, (errLRange, result) => {
+          if (errLRange) {
+            log.error(errLRange.message);
+            callback(null);
+            return;
           }
+          const ret = result.map((x) => JSON.parse(x)).filter(isMessage);
+          redisClient
+            .multi()
+            .ltrim(queueName, result.length, -1)
+            .exec((errExec) => {
+              if (errExec) {
+                log.error(errExec.message);
+                return;
+              }
+            });
+          callback(ret);
         });
-        callback(ret);
       });
     } else {
       callback(null);
@@ -249,6 +268,7 @@ const messenger = {
   sendAck,
   addClient,
   removeClient,
+  getClient,
 };
 
 export default messenger;

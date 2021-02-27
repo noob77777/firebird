@@ -58,6 +58,13 @@ var addClient = function (userName, sessionKey, socketID) {
 /**
  * @param socketID
  */
+var getClient = function (socketID) {
+    var userName = messengerState.getUser(socketID);
+    return userName;
+};
+/**
+ * @param socketID
+ */
 var removeClient = function (socketID) {
     var userName = messengerState.getUser(socketID);
     messengerState.removeSocket(socketID);
@@ -75,19 +82,30 @@ var pendingMessages = function (userName, sessionKey, callback) {
     auth_1.default.validateSession(userName, sessionKey, function (success) {
         var queueName = userName + constants_1.QUEUE_SUFFIX;
         if (success) {
-            global_1.redisClient.lrange(queueName, 0, -1, function (errLRange, result) {
-                if (errLRange) {
-                    global_1.log.error(errLRange.message);
+            global_1.redisClient.watch(queueName, function (errWatch) {
+                if (errWatch) {
+                    global_1.log.error(errWatch);
                     callback(null);
                     return;
                 }
-                var ret = result.map(function (x) { return JSON.parse(x); }).filter(global_1.isMessage);
-                global_1.redisClient.ltrim(queueName, ret.length, -1, function (errLTrim) {
-                    if (errLTrim) {
-                        global_1.log.error(errLTrim.message);
+                global_1.redisClient.lrange(queueName, 0, -1, function (errLRange, result) {
+                    if (errLRange) {
+                        global_1.log.error(errLRange.message);
+                        callback(null);
+                        return;
                     }
+                    var ret = result.map(function (x) { return JSON.parse(x); }).filter(global_1.isMessage);
+                    global_1.redisClient
+                        .multi()
+                        .ltrim(queueName, result.length, -1)
+                        .exec(function (errExec) {
+                        if (errExec) {
+                            global_1.log.error(errExec.message);
+                            return;
+                        }
+                    });
+                    callback(ret);
                 });
-                callback(ret);
             });
         }
         else {
@@ -210,5 +228,6 @@ var messenger = {
     sendAck: sendAck,
     addClient: addClient,
     removeClient: removeClient,
+    getClient: getClient,
 };
 exports.default = messenger;

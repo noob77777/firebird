@@ -10,12 +10,13 @@ import {
 } from "./constants";
 import auth from "./auth/auth";
 import messenger from "./messenger/messenger";
+import GarbageCollector from "./GarbageCollector/GarbageCollector";
 
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 
 app.get("/", (req, res) => {
-  res.send("firebird api");
+  res.send("WELCOME TO FIREBIRD API");
 });
 
 app.post("/api/createUser", (req, res) => {
@@ -62,10 +63,10 @@ app.post("/api/validateUser", (req, res) => {
   }
 });
 
-app.post("/api/getPublicKey", (req, res) => {
-  const userName = req.body.userName;
-  const sessionKey = req.body.sessionKey;
-  const user = req.body.user;
+app.get("/api/publicKey", (req, res) => {
+  const userName = req.query.userName;
+  const sessionKey = req.query.sessionKey;
+  const user = req.query.user;
   if (
     typeof userName === "string" &&
     typeof sessionKey === "string" &&
@@ -86,9 +87,9 @@ app.post("/api/getPublicKey", (req, res) => {
   }
 });
 
-app.post("/api/getPendingMessages", (req, res) => {
-  const userName = req.body.userName;
-  const sessionKey = req.body.sessionKey;
+app.get("/api/pendingMessages", (req, res) => {
+  const userName = req.query.userName;
+  const sessionKey = req.query.sessionKey;
   if (typeof userName === "string" && typeof sessionKey === "string") {
     messenger.pendingMessages(userName, sessionKey, (messageList) => {
       if (messageList) {
@@ -130,10 +131,10 @@ app.post("/api/createGroup", (req, res) => {
   }
 });
 
-app.post("/api/getGroupMembers", (req, res) => {
-  const userName = req.body.userName;
-  const sessionKey = req.body.sessionKey;
-  const groupName = req.body.groupName;
+app.get("/api/groupMembers", (req, res) => {
+  const userName = req.query.userName;
+  const sessionKey = req.query.sessionKey;
+  const groupName = req.query.groupName;
   if (
     typeof userName === "string" &&
     typeof sessionKey === "string" &&
@@ -194,7 +195,11 @@ io.on("connection", (client) => {
   });
 
   client.on("disconnect", () => {
+    const userName = messenger.getClient(client.id);
     messenger.removeClient(client.id);
+    if (userName) {
+      auth.removeSession(userName);
+    }
   });
 
   client.on(SEND_MESSAGE, (data: any) => {
@@ -223,3 +228,5 @@ serverHTTP.listen(SERVER_PORT_HTTP, () => {
 serverHTTPS.listen(SERVER_PORT_HTTPS, () => {
   log.info(`firebird listening at https://localhost:${SERVER_PORT_HTTPS}`);
 });
+
+GarbageCollector.start();

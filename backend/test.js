@@ -33,11 +33,9 @@ const testValidateUser = (u) => {
 
 const testGetPublicKey = (userName, key) => {
   axios
-    .post("http://localhost:8080/api/getPublicKey", {
-      userName: userName,
-      sessionKey: key,
-      user: "user.u2",
-    })
+    .get(
+      `http://localhost:8080/api/publicKey?userName=${userName}&sessionKey=${key}&user=user.u2`
+    )
     .then((res) => {
       console.log(res.data);
     });
@@ -45,10 +43,9 @@ const testGetPublicKey = (userName, key) => {
 
 const testGetPendingMessages = (userName, key) => {
   axios
-    .post("http://localhost:8080/api/getPendingMessages", {
-      userName: userName,
-      sessionKey: key,
-    })
+    .get(
+      `http://localhost:8080/api/pendingMessages?userName=${userName}&sessionKey=${key}`
+    )
     .then((res) => {
       console.log(res.data);
     });
@@ -80,15 +77,13 @@ const testJoinGroup = (userName, key) => {
 
 const testGetGroupMembers = (userName, key) => {
   axios
-    .post("http://localhost:8080/api/getGroupMembers", {
-      userName: userName,
-      sessionKey: key,
-      groupName: "group.broadcast",
-    })
+    .get(
+      `http://localhost:8080/api/groupMembers?userName=${userName}&sessionKey=${key}&groupName=group.broadcast`
+    )
     .then((res) => {
       console.log(res.data);
     });
-}
+};
 
 const testSocketConnect = (userName, key) => {
   socket.emit(
@@ -104,7 +99,7 @@ const testSocketConnect = (userName, key) => {
       .digest("hex"),
     type: "text",
     sender: userName,
-    receiver: "user.u2",
+    receiver: "group.broadcast",
     body: "Hello",
   };
   console.log("send_message: " + JSON.stringify(message));
@@ -112,6 +107,12 @@ const testSocketConnect = (userName, key) => {
     "send_message",
     JSON.stringify({ userName: userName, sessionKey: key, message: message })
   );
+};
+
+const testAutoTimeOut = (userName, key) => {
+  setTimeout(() => testGetPublicKey(userName, key), 1000);
+  setTimeout(() => testGetPublicKey(userName, key), 3000);
+  setTimeout(() => testGetPublicKey(userName, key), 10000);
 };
 
 const runTest = (userName, hash, test) => {
@@ -129,4 +130,4 @@ const runTest = (userName, hash, test) => {
 // runTest("user.u1", "hash", testCreateGroup);
 // runTest("user.u2", "hash", testJoinGroup);
 // runTest("user.u1", "hash", testGetGroupMembers);
-
+// runTest("user.u1", "hash", testAutoTimeOut);
