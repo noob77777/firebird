@@ -88,7 +88,7 @@ const removeClient = (socketID: string): void => {
 };
 
 /**
- * [secure] [redis]
+ * [secure] [redis] [atomic]
  * @param userName
  * @param sessionKey
  * @param callback
