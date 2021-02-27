@@ -1,5 +1,5 @@
 import { log, redisClient, User, isUser } from "../global";
-import { BROADCAST_GROUP } from "../constants";
+import { BROADCAST_GROUP, LOG_FILE_PATH } from "../constants";
 import crypto from "crypto";
 
 class SessionStore {
@@ -15,7 +15,7 @@ class SessionStore {
 const sessionStore: SessionStore = new SessionStore();
 
 /**
- * [secure]
+ * [secure] [redis] [atomic]
  * @param userName
  * @param hash
  * @param publicKey
@@ -67,7 +67,7 @@ const createUser = (
 };
 
 /**
- * [secure]
+ * [secure] [redis]
  * @param userName
  * @param hash
  * @param callback
@@ -117,7 +117,7 @@ const validateSession = (
 };
 
 /**
- * [secure]
+ * [secure] [redis]
  * @param userName
  * @param sessionKey
  * @param user
@@ -184,12 +184,138 @@ const generateSessionKey = (userName: string): string => {
   return crypto.createHash("sha256").update(key).digest("hex");
 };
 
+/**
+ * [secure] [redis] [atomic]
+ * @param userName
+ * @param sessionKey
+ * @param groupName
+ * @param callback
+ */
+const createGroup = (
+  userName: string,
+  sessionKey: string,
+  groupName: string,
+  callback: (success: boolean) => void
+): void => {
+  validateSession(userName, sessionKey, (success) => {
+    if (success) {
+      redisClient.watch(groupName, (errWatch) => {
+        if (errWatch) {
+          log.error(errWatch.message);
+          callback(false);
+          return;
+        }
+        redisClient.lrange(groupName, 0, -1, (errLRange, result) => {
+          if (errLRange) {
+            log.error(errLRange.message);
+            callback(false);
+            return;
+          }
+          if (result.length === 0) {
+            redisClient
+              .multi()
+              .rpush(groupName, userName)
+              .exec((errExec) => {
+                if (errExec) {
+                  log.error(errExec.message);
+                  callback(false);
+                  return;
+                }
+                callback(true);
+              });
+          } else {
+            callback(false);
+          }
+        });
+      });
+    } else {
+      callback(false);
+    }
+  });
+};
+
+/**
+ * [secure] [redis]
+ * @param userName
+ * @param sessionKey
+ * @param group
+ * @param callback
+ */
+const getGroupMembers = (
+  userName: string,
+  sessionKey: string,
+  group: string,
+  callback: (users: string[] | null) => void
+): void => {
+  validateSession(userName, sessionKey, (success) => {
+    if (success) {
+      redisClient.lrange(group, 0, -1, (err, users) => {
+        if (err) {
+          log.error(err.message);
+          callback(null);
+          return;
+        }
+        if (users.includes(userName)) {
+          callback(users);
+        } else {
+          callback(null);
+        }
+      });
+    } else {
+      callback(null);
+    }
+  });
+};
+
+/**
+ * [sucure] [redis]
+ * @param userName
+ * @param sessionKey
+ * @param group
+ * @param callback
+ */
+const joinGroup = (
+  userName: string,
+  sessionKey: string,
+  group: string,
+  callback: (success: boolean) => void
+): void => {
+  validateSession(userName, sessionKey, (success) => {
+    if (success) {
+      redisClient.lrange(group, 0, -1, (errLrange, result) => {
+        if (errLrange) {
+          log.error(errLrange.message);
+          callback(false);
+          return;
+        }
+        if (result.length !== 0 && !result.includes(userName)) {
+          redisClient.rpush(group, userName, (errRPush) => {
+            if (errRPush) {
+              log.error(errRPush.message);
+              callback(false);
+              return;
+            }
+            callback(true);
+          });
+        } else {
+          callback(false);
+        }
+      });
+    } else {
+      callback(false);
+    }
+  });
+};
+
 const auth = {
   createUser,
   validateUser,
   validateSession,
   getPublicKey,
   userExists,
+  createGroup,
+  getGroupMembers,
+  joinGroup,
 };
 
 export default auth;

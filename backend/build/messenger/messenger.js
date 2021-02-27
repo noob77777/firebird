@@ -31,6 +31,12 @@ var MessengerState = /** @class */ (function () {
             }
             return null;
         };
+        this.getUser = function (socketId) {
+            if (socketId in _this.socketStoreIndex) {
+                return _this.socketStoreIndex[socketId];
+            }
+            return null;
+        };
     }
     return MessengerState;
 }());
@@ -39,11 +45,35 @@ var messengerState = new MessengerState();
  * [secure]
  * @param userName
  * @param sessionKey
+ * @param socketID
+ */
+var addClient = function (userName, sessionKey, socketID) {
+    auth_1.default.validateSession(userName, sessionKey, function (success) {
+        if (success) {
+            messengerState.addSocket(userName, socketID);
+            global_1.io.sockets.emit(constants_1.USER_STATE_CHANGE, JSON.stringify({ userName: userName, active: true }));
+        }
+    });
+};
+/**
+ * @param socketID
+ */
+var removeClient = function (socketID) {
+    var userName = messengerState.getUser(socketID);
+    messengerState.removeSocket(socketID);
+    if (userName) {
+        global_1.io.sockets.emit(constants_1.USER_STATE_CHANGE, JSON.stringify({ userName: userName, active: false }));
+    }
+};
+/**
+ * [secure] [redis]
+ * @param userName
+ * @param sessionKey
  * @param callback
  */
 var pendingMessages = function (userName, sessionKey, callback) {
     auth_1.default.validateSession(userName, sessionKey, function (success) {
-        var queueName = userName + "." + constants_1.QUEUE_SUFFIX;
+        var queueName = userName + constants_1.QUEUE_SUFFIX;
         if (success) {
             global_1.redisClient.lrange(queueName, 0, -1, function (errLRange, result) {
                 if (errLRange) {
@@ -65,11 +95,11 @@ var pendingMessages = function (userName, sessionKey, callback) {
         }
     });
 };
-var enQueue = function (receiver, message, callback) {
+var enQueueMessage = function (receiver, message, callback) {
     auth_1.default.userExists(receiver, function (exists) {
         if (exists) {
-            var queue = receiver + "." + constants_1.QUEUE_SUFFIX;
-            global_1.redisClient.rpush(queue, JSON.stringify(message), function (err) {
+            var queueName = receiver + constants_1.QUEUE_SUFFIX;
+            global_1.redisClient.rpush(queueName, JSON.stringify(message), function (err) {
                 if (err) {
                     global_1.log.error(err.message);
                     callback(false);
@@ -77,57 +107,6 @@ var enQueue = function (receiver, message, callback) {
                 }
                 callback(true);
             });
-        }
-        else {
-            callback(false);
-        }
-    });
-};
-/**
- * [secure]
- * @param userName
- * @param sessionKey
- * @param socketID
- */
-var addClient = function (userName, sessionKey, socketID) {
-    auth_1.default.validateSession(userName, sessionKey, function (success) {
-        if (success) {
-            messengerState.addSocket(userName, socketID);
-        }
-    });
-};
-/**
- * @param socketID
- */
-var removeClient = function (socketID) {
-    messengerState.removeSocket(socketID);
-};
-/**
- * [secure]
- * @param userName
- * @param sessionKey
- * @param message
- * @param callback
- */
-var sendMessage = function (userName, sessionKey, message, callback) {
-    if (userName !== message.sender) {
-        callback(false);
-        return;
-    }
-    auth_1.default.validateSession(userName, sessionKey, function (success) {
-        if (success) {
-            if (messengerState.isUserActive(message.receiver)) {
-                var socketId = messengerState.getSocket(message.receiver);
-                if (!socketId) {
-                    callback(false);
-                    return;
-                }
-                global_1.io.to(socketId).emit(constants_1.RECV_MESSAGE, JSON.stringify(message));
-                callback(true);
-            }
-            else {
-                enQueue(message.receiver, message, callback);
-            }
         }
         else {
             callback(false);
@@ -160,6 +139,70 @@ var sendAck = function (userName, messageId, success) {
             global_1.log.warn("both ack and message delivery failed for user: " + userName + " with id: " + messageId);
         }
     }
+};
+var getGroupMembers = function (group, callback) {
+    global_1.redisClient.lrange(group, 0, -1, function (err, users) {
+        if (err) {
+            global_1.log.error(err.message);
+            callback(null);
+            return;
+        }
+        callback(users);
+    });
+};
+var sendMessageSingleUser = function (receiver, message, callback) {
+    if (messengerState.isUserActive(receiver)) {
+        var socketId = messengerState.getSocket(receiver);
+        if (!socketId) {
+            callback(false);
+            return;
+        }
+        global_1.io.to(socketId).emit(constants_1.RECV_MESSAGE, JSON.stringify(message));
+        callback(true);
+    }
+    else {
+        enQueueMessage(receiver, message, callback);
+    }
+};
+/**
+ * [secure] [redis]
+ * @param userName
+ * @param sessionKey
+ * @param message
+ * @param callback
+ */
+var sendMessage = function (userName, sessionKey, message, callback) {
+    if (userName !== message.sender) {
+        callback(false);
+        return;
+    }
+    auth_1.default.validateSession(userName, sessionKey, function (success) {
+        if (success) {
+            if (message.receiver.startsWith(constants_1.GROUP_PREFIX)) {
+                getGroupMembers(message.receiver, function (users) {
+                    if (users && users.includes(userName)) {
+                        users.forEach(function (receiver) {
+                            if (receiver !== userName) {
+                                sendMessageSingleUser(receiver, message, function (trash) {
+                                    return;
+                                });
+                            }
+                        });
+                        callback(true);
+                    }
+                    else {
+                        callback(false);
+                    }
+                });
+            }
+            else {
+                sendMessageSingleUser(message.receiver, message, callback);
+            }
+        }
+        else {
+            callback(false);
+        }
+    });
 };
 var messenger = {
     pendingMessages: pendingMessages,

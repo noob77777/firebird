@@ -1,6 +1,7 @@
 import express from "express";
 import { log, app, serverHTTP, serverHTTPS, io, isMessage } from "./global";
 import {
+  GROUP_PREFIX,
   NEW_CONNECTION,
   SEND_MESSAGE,
   SERVER_PORT_HTTP,
@@ -14,7 +15,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 
 app.get("/", (req, res) => {
-  res.send("Hello!!!");
+  res.send("firebird api");
 });
 
 app.post("/api/createUser", (req, res) => {
@@ -25,12 +26,12 @@ app.post("/api/createUser", (req, res) => {
     typeof userName === "string" &&
     typeof hash === "string" &&
     typeof publicKey === "string" &&
-    userName.startsWith(USER_PREFIX + ".")
+    userName.startsWith(USER_PREFIX)
   ) {
     auth.createUser(userName, hash, publicKey, (success) => {
       if (success) {
         res.status(200);
-        res.json({ message: "OK" });
+        res.json({ message: "OK", userName });
       } else {
         res.status(401);
         res.json({ message: "Permission Denied" });
@@ -49,7 +50,7 @@ app.post("/api/validateUser", (req, res) => {
     auth.validateUser(userName, hash, (sessionKey) => {
       if (sessionKey) {
         res.status(200);
-        res.json({ message: "OK", sessionKey });
+        res.json({ message: "OK", userName, sessionKey });
       } else {
         res.status(401);
         res.json({ message: "Permission Denied" });
@@ -73,7 +74,7 @@ app.post("/api/getPublicKey", (req, res) => {
     auth.getPublicKey(userName, sessionKey, user, (publicKey) => {
       if (publicKey) {
         res.status(200);
-        res.json({ message: "OK", publicKey });
+        res.json({ message: "OK", userName: user, publicKey });
       } else {
         res.status(401);
         res.json({ message: "Permission Denied" });
@@ -93,6 +94,79 @@ app.post("/api/getPendingMessages", (req, res) => {
       if (messageList) {
         res.status(200);
         res.json({ message: "OK", messageList });
+      } else {
+        res.status(401);
+        res.json({ message: "Permission Denied" });
+      }
+    });
+  } else {
+    res.status(400);
+    res.json({ message: "Invalid Arguments" });
+  }
+});
+
+app.post("/api/createGroup", (req, res) => {
+  const userName = req.body.userName;
+  const sessionKey = req.body.sessionKey;
+  const groupName = req.body.groupName;
+  if (
+    typeof userName === "string" &&
+    typeof sessionKey === "string" &&
+    typeof groupName === "string" &&
+    groupName.startsWith(GROUP_PREFIX)
+  ) {
+    auth.createGroup(userName, sessionKey, groupName, (success) => {
+      if (success) {
+        res.status(200);
+        res.json({ message: "OK", groupName });
+      } else {
+        res.status(401);
+        res.json({ message: "Permission Denied" });
+      }
+    });
+  } else {
+    res.status(400);
+    res.json({ message: "Invalid Arguments" });
+  }
+});
+
+app.post("/api/getGroupMembers", (req, res) => {
+  const userName = req.body.userName;
+  const sessionKey = req.body.sessionKey;
+  const groupName = req.body.groupName;
+  if (
+    typeof userName === "string" &&
+    typeof sessionKey === "string" &&
+    typeof groupName === "string"
+  ) {
+    auth.getGroupMembers(userName, sessionKey, groupName, (users) => {
+      if (users) {
+        res.status(200);
+        res.json({ message: "OK", groupName, groupMembers: users });
+      } else {
+        res.status(401);
+        res.json({ message: "Permission Denied" });
+      }
+    });
+  } else {
+    res.status(400);
+    res.json({ message: "Invalid Arguments" });
+  }
+});
+
+app.post("/api/joinGroup", (req, res) => {
+  const userName = req.body.userName;
+  const sessionKey = req.body.sessionKey;
+  const groupName = req.body.groupName;
+  if (
+    typeof userName === "string" &&
+    typeof sessionKey === "string" &&
+    typeof groupName === "string"
+  ) {
+    auth.joinGroup(userName, sessionKey, groupName, (success) => {
+      if (success) {
+        res.status(200);
+        res.json({ message: "OK", groupName });
       } else {
         res.status(401);
         res.json({ message: "Permission Denied" });

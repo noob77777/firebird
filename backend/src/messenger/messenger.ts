@@ -1,10 +1,12 @@
 import { log, redisClient, Message, isMessage, io } from "../global";
 import {
   ACK_MESSAGE,
+  GROUP_PREFIX,
   QUEUE_SUFFIX,
   RECV_MESSAGE,
   TYPE_ACK,
   USER_SERVER,
+  USER_STATE_CHANGE,
 } from "../constants";
 import auth from "../auth/auth";
 
@@ -31,12 +33,54 @@ class MessengerState {
     }
     return null;
   };
+  public getUser = (socketId: string): string | null => {
+    if (socketId in this.socketStoreIndex) {
+      return this.socketStoreIndex[socketId];
+    }
+    return null;
+  };
 }
 
 const messengerState = new MessengerState();
 
 /**
  * [secure]
+ * @param userName
+ * @param sessionKey
+ * @param socketID
+ */
+const addClient = (
+  userName: string,
+  sessionKey: string,
+  socketID: string
+): void => {
+  auth.validateSession(userName, sessionKey, (success) => {
+    if (success) {
+      messengerState.addSocket(userName, socketID);
+      io.sockets.emit(
+        USER_STATE_CHANGE,
+        JSON.stringify({ userName, active: true })
+      );
+    }
+  });
+};
+
+/**
+ * @param socketID
+ */
+const removeClient = (socketID: string): void => {
+  const userName = messengerState.getUser(socketID);
+  messengerState.removeSocket(socketID);
+  if (userName) {
+    io.sockets.emit(
+      USER_STATE_CHANGE,
+      JSON.stringify({ userName, active: false })
+    );
+  }
+};
+
+/**
+ * [secure] [redis]
  * @param userName
  * @param sessionKey
  * @param callback
@@ -47,7 +91,7 @@ const pendingMessages = (
   callback: (messageList: Message[] | null) => void
 ): void => {
   auth.validateSession(userName, sessionKey, (success) => {
-    const queueName = userName + "." + QUEUE_SUFFIX;
+    const queueName = userName + QUEUE_SUFFIX;
     if (success) {
       redisClient.lrange(queueName, 0, -1, (errLRange, result) => {
         if (errLRange) {
@@ -69,15 +113,15 @@ const pendingMessages = (
   });
 };
 
-const enQueue = (
+const enQueueMessage = (
   receiver: string,
   message: Message,
   callback: (success: boolean) => void
 ): void => {
   auth.userExists(receiver, (exists) => {
     if (exists) {
-      const queue = receiver + "." + QUEUE_SUFFIX;
-      redisClient.rpush(queue, JSON.stringify(message), (err) => {
+      const queueName = receiver + QUEUE_SUFFIX;
+      redisClient.rpush(queueName, JSON.stringify(message), (err) => {
         if (err) {
           log.error(err.message);
           callback(false);
@@ -85,68 +129,6 @@ const enQueue = (
         }
         callback(true);
       });
-    } else {
-      callback(false);
-    }
-  });
-};
-
-/**
- * [secure]
- * @param userName
- * @param sessionKey
- * @param socketID
- */
-const addClient = (
-  userName: string,
-  sessionKey: string,
-  socketID: string
-): void => {
-  auth.validateSession(userName, sessionKey, (success) => {
-    if (success) {
-      messengerState.addSocket(userName, socketID);
-    }
-  });
-};
-
-/**
- * @param socketID
- */
-const removeClient = (socketID: string): void => {
-  messengerState.removeSocket(socketID);
-};
-
-/**
- * [secure]
- * @param userName
- * @param sessionKey
- * @param message
- * @param callback
- */
-const sendMessage = (
-  userName: string,
-  sessionKey: string,
-  message: Message,
-  callback: (success: boolean) => void
-): void => {
-  if (userName !== message.sender) {
-    callback(false);
-    return;
-  }
-
-  auth.validateSession(userName, sessionKey, (success) => {
-    if (success) {
-      if (messengerState.isUserActive(message.receiver)) {
-        const socketId = messengerState.getSocket(message.receiver);
-        if (!socketId) {
-          callback(false);
-          return;
-        }
-        io.to(socketId).emit(RECV_MESSAGE, JSON.stringify(message));
-        callback(true);
-      } else {
-        enQueue(message.receiver, message, callback);
-      }
     } else {
       callback(false);
     }
@@ -183,6 +165,82 @@ const sendAck = (
       );
     }
   }
+};
+
+const getGroupMembers = (
+  group: string,
+  callback: (users: string[] | null) => void
+): void => {
+  redisClient.lrange(group, 0, -1, (err, users) => {
+    if (err) {
+      log.error(err.message);
+      callback(null);
+      return;
+    }
+    callback(users);
+  });
+};
+
+const sendMessageSingleUser = (
+  receiver: string,
+  message: Message,
+  callback: (success: boolean) => void
+): void => {
+  if (messengerState.isUserActive(receiver)) {
+    const socketId = messengerState.getSocket(receiver);
+    if (!socketId) {
+      callback(false);
+      return;
+    }
+    io.to(socketId).emit(RECV_MESSAGE, JSON.stringify(message));
+    callback(true);
+  } else {
+    enQueueMessage(receiver, message, callback);
+  }
+};
+
+/**
+ * [secure] [redis]
+ * @param userName
+ * @param sessionKey
+ * @param message
+ * @param callback
+ */
+const sendMessage = (
+  userName: string,
+  sessionKey: string,
+  message: Message,
+  callback: (success: boolean) => void
+): void => {
+  if (userName !== message.sender) {
+    callback(false);
+    return;
+  }
+
+  auth.validateSession(userName, sessionKey, (success) => {
+    if (success) {
+      if (message.receiver.startsWith(GROUP_PREFIX)) {
+        getGroupMembers(message.receiver, (users) => {
+          if (users && users.includes(userName)) {
+            users.forEach((receiver) => {
+              if (receiver !== userName) {
+                sendMessageSingleUser(receiver, message, (trash) => {
+                  return;
+                });
+              }
+            });
+            callback(true);
+          } else {
+            callback(false);
+          }
+        });
+      } else {
+        sendMessageSingleUser(message.receiver, message, callback);
+      }
+    } else {
+      callback(false);
+    }
+  });
 };
 
 const messenger = {

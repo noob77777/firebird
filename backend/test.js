@@ -11,6 +11,10 @@ socket.on("ack_message", (data) => {
   console.log("ack_message: " + data);
 });
 
+socket.on("user_state_change", (data) => {
+  console.log("user_state_change: " + data);
+});
+
 const u1 = { userName: "user.u1", hash: "hash", publicKey: "key" };
 const u2 = { userName: "user.u2", hash: "hash", publicKey: "key" };
 const u_failed = { userName: "u1", hash: "hash", publicKey: "key" };
@@ -32,7 +36,7 @@ const testGetPublicKey = (userName, key) => {
     .post("http://localhost:8080/api/getPublicKey", {
       userName: userName,
       sessionKey: key,
-      user: "u2",
+      user: "user.u2",
     })
     .then((res) => {
       console.log(res.data);
@@ -49,6 +53,42 @@ const testGetPendingMessages = (userName, key) => {
       console.log(res.data);
     });
 };
+
+const testCreateGroup = (userName, key) => {
+  axios
+    .post("http://localhost:8080/api/createGroup", {
+      userName: userName,
+      sessionKey: key,
+      groupName: "group.testgroup2",
+    })
+    .then((res) => {
+      console.log(res.data);
+    });
+};
+
+const testJoinGroup = (userName, key) => {
+  axios
+    .post("http://localhost:8080/api/joinGroup", {
+      userName: userName,
+      sessionKey: key,
+      groupName: "group.testgroup",
+    })
+    .then((res) => {
+      console.log(res.data);
+    });
+};
+
+const testGetGroupMembers = (userName, key) => {
+  axios
+    .post("http://localhost:8080/api/getGroupMembers", {
+      userName: userName,
+      sessionKey: key,
+      groupName: "group.testgroup2",
+    })
+    .then((res) => {
+      console.log(res.data);
+    });
+}
 
 const testSocketConnect = (userName, key) => {
   socket.emit(
@@ -81,11 +121,12 @@ const runTest = (userName, hash, test) => {
   });
 };
 
+// runTest("user.u1", "hash", testGetPublicKey);
 // runTest("user.u1", "hash", testGetPendingMessages);
 // runTest("user.u2", "hash", testGetPendingMessages);
-runTest("user.u2", "hash", testSocketConnect);
-runTest("user.u1", "hash", testSocketConnect);
+// runTest("user.u2", "hash", testSocketConnect);
+// runTest("user.u1", "hash", testSocketConnect);
+// runTest("user.u1", "hash", testCreateGroup);
+// runTest("user.u2", "hash", testJoinGroup);
+// runTest("user.u1", "hash", testGetGroupMembers);
 
-// for (let i = 0; i < 5; ++i) {
-//   runTest("user.u1", "hash", testSocketConnect);
-// }

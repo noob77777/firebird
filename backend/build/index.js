@@ -20,11 +20,11 @@ global_1.app.post("/api/createUser", function (req, res) {
     if (typeof userName === "string" &&
         typeof hash === "string" &&
         typeof publicKey === "string" &&
-        userName.startsWith(constants_1.USER_PREFIX + ".")) {
+        userName.startsWith(constants_1.USER_PREFIX)) {
         auth_1.default.createUser(userName, hash, publicKey, function (success) {
             if (success) {
                 res.status(200);
-                res.json({ message: "OK" });
+                res.json({ message: "OK", userName: userName });
             }
             else {
                 res.status(401);
@@ -44,7 +44,7 @@ global_1.app.post("/api/validateUser", function (req, res) {
         auth_1.default.validateUser(userName, hash, function (sessionKey) {
             if (sessionKey) {
                 res.status(200);
-                res.json({ message: "OK", sessionKey: sessionKey });
+                res.json({ message: "OK", userName: userName, sessionKey: sessionKey });
             }
             else {
                 res.status(401);
@@ -67,7 +67,7 @@ global_1.app.post("/api/getPublicKey", function (req, res) {
         auth_1.default.getPublicKey(userName, sessionKey, user, function (publicKey) {
             if (publicKey) {
                 res.status(200);
-                res.json({ message: "OK", publicKey: publicKey });
+                res.json({ message: "OK", userName: user, publicKey: publicKey });
             }
             else {
                 res.status(401);
@@ -88,6 +88,76 @@ global_1.app.post("/api/getPendingMessages", function (req, res) {
             if (messageList) {
                 res.status(200);
                 res.json({ message: "OK", messageList: messageList });
+            }
+            else {
+                res.status(401);
+                res.json({ message: "Permission Denied" });
+            }
+        });
+    }
+    else {
+        res.status(400);
+        res.json({ message: "Invalid Arguments" });
+    }
+});
+global_1.app.post("/api/createGroup", function (req, res) {
+    var userName = req.body.userName;
+    var sessionKey = req.body.sessionKey;
+    var groupName = req.body.groupName;
+    if (typeof userName === "string" &&
+        typeof sessionKey === "string" &&
+        typeof groupName === "string" &&
+        groupName.startsWith(constants_1.GROUP_PREFIX)) {
+        auth_1.default.createGroup(userName, sessionKey, groupName, function (success) {
+            if (success) {
+                res.status(200);
+                res.json({ message: "OK", groupName: groupName });
+            }
+            else {
+                res.status(401);
+                res.json({ message: "Permission Denied" });
+            }
+        });
+    }
+    else {
+        res.status(400);
+        res.json({ message: "Invalid Arguments" });
+    }
+});
+global_1.app.post("/api/getGroupMembers", function (req, res) {
+    var userName = req.body.userName;
+    var sessionKey = req.body.sessionKey;
+    var groupName = req.body.groupName;
+    if (typeof userName === "string" &&
+        typeof sessionKey === "string" &&
+        typeof groupName === "string") {
+        auth_1.default.getGroupMembers(userName, sessionKey, groupName, function (users) {
+            if (users) {
+                res.status(200);
+                res.json({ message: "OK", groupName: groupName, groupMembers: users });
+            }
+            else {
+                res.status(401);
+                res.json({ message: "Permission Denied" });
+            }
+        });
+    }
+    else {
+        res.status(400);
+        res.json({ message: "Invalid Arguments" });
+    }
+});
+global_1.app.post("/api/joinGroup", function (req, res) {
+    var userName = req.body.userName;
+    var sessionKey = req.body.sessionKey;
+    var groupName = req.body.groupName;
+    if (typeof userName === "string" &&
+        typeof sessionKey === "string" &&
+        typeof groupName === "string") {
+        auth_1.default.joinGroup(userName, sessionKey, groupName, function (success) {
+            if (success) {
+                res.status(200);
+                res.json({ message: "OK", groupName: groupName });
             }
             else {
                 res.status(401);
