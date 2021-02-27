@@ -1,2 +1,2 @@
 # firebird
-Fast Encrypted Messaging
+Fast end-to-end Encrypted Messaging
