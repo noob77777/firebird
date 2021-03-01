@@ -1,20 +1,14 @@
 import FirebirdContext from "./FirebirdContext/FirebirdContext";
-import { useContext, useEffect } from "react";
-import styles from "./App.module.scss";
-import ActionTypes from "./FirebirdContext/ActionTypes";
+import { useContext } from "react";
+import Login from "./Components/Login/Login";
 
 const App = (): JSX.Element => {
-  const { state, dispatch } = useContext(FirebirdContext);
-  console.log(state);
-
-  useEffect(() => {
-    dispatch({ type: ActionTypes.DISPATCH_TEST, payload: null });
-  }, [dispatch]);
+  const { state } = useContext(FirebirdContext);
 
   return (
-    <div className={styles.App}>
-      <h1>Hi</h1>
-    </div>
+    <>
+      <Login />
+    </>
   );
 };
 

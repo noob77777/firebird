@@ -1,7 +1,11 @@
+export const FIREBIRD_SERVER: string = "http://localhost:8080";
+
 export const USER_PREFIX: string = "user.";
 export const GROUP_PREFIX: string = "group.";
 export const BROADCAST_GROUP: string = "group.broadcast";
 export const USER_SERVER: string = "user.firebird";
+export const PRIVATE_KEY_SUFFIX: string = ".private.key";
+export const PUBLIC_KEY_SUFFIX: string = ".public.key";
 
 export const NEW_CONNECTION: string = "new_connection";
 export const SEND_MESSAGE: string = "send_message";

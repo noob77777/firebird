@@ -1,4 +1,5 @@
 import { createContext, Dispatch, useReducer } from "react";
+import { PRIVATE_KEY_SUFFIX, PUBLIC_KEY_SUFFIX } from "../constants";
 import ActionTypes from "./ActionTypes";
 
 export interface User {
@@ -51,6 +52,7 @@ export const isContact = (o: any): o is Contact => {
 
 export interface FirebirdState {
   auth: {
+    userName: string | null;
     sessionKey: string | null;
     privateKey: string | null;
     publicKey: string | null;
@@ -78,7 +80,13 @@ export interface FirebirdContextAction {
 }
 
 const initState: FirebirdState = {
-  auth: { sessionKey: null, privateKey: null, publicKey: null, hash: null },
+  auth: {
+    userName: null,
+    sessionKey: null,
+    privateKey: null,
+    publicKey: null,
+    hash: null,
+  },
   contacts: [],
   currentReceiver: null,
 };
@@ -93,8 +101,20 @@ export const FirebirdContextReducer = (
   action: FirebirdContextAction
 ): FirebirdState => {
   switch (action.type) {
-    case ActionTypes.DISPATCH_TEST:
-      return { ...state, currentReceiver: "dispatch_test" };
+    case ActionTypes.SIGN_UP:
+      localStorage.setItem(
+        action.payload.userName + PRIVATE_KEY_SUFFIX,
+        action.payload.auth.privateKey
+      );
+      localStorage.setItem(
+        action.payload.userName + PUBLIC_KEY_SUFFIX,
+        action.payload.auth.publicKey
+      );
+      return { ...state, auth: { ...state.auth, ...action.payload.auth } };
+    case ActionTypes.LOAD_RSA_KEYS:
+      return { ...state, auth: { ...state.auth, ...action.payload } };
+    case ActionTypes.SIGN_IN:
+      return { ...state, auth: { ...state.auth, ...action.payload } };
     default:
       return state;
   }
