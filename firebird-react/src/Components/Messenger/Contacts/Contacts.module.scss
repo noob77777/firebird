@@ -1,0 +1,87 @@
+@import "../../../common.module.scss";
+
+.Contacts {
+  // /* label color */
+  // :global(.input-field label) {
+  //   color: $dark-red;
+  // }
+  /* label focus color */
+  :global(.input-field input[type="text"]:focus + label) {
+    color: $dark-red;
+  }
+  /* label underline focus color */
+  :global(.input-field input[type="text"]:focus) {
+    border-bottom: 1px solid $dark-red;
+    box-shadow: 0 1px 0 0 $dark-red;
+  }
+  /* valid color */
+  :global(.input-field input[type="text"].valid) {
+    border-bottom: 1px solid $dark-red;
+    box-shadow: 0 1px 0 0 $dark-red;
+  }
+  /* invalid color */
+  :global(.input-field input[type="text"].invalid) {
+    border-bottom: 1px solid $dark-red;
+    box-shadow: 0 1px 0 0 $dark-red;
+  }
+  /* icon prefix focus color */
+  :global(.input-field .prefix.active) {
+    color: $dark-red;
+  }
+
+  .search {
+    margin-bottom: 0;
+  }
+  :global(.btn) {
+    background-color: $dark-red !important;
+  }
+  :global(.btn:hover) {
+    background-color: $darker-red !important;
+  }
+
+  .list {
+    max-height: 60vh;
+    overflow-y: scroll;
+  }
+
+  .vh60 {
+    height: 60vh;
+    text-align: center;
+  }
+
+  .ncpfcenter {
+    width: 100%;
+  }
+
+  .contactSelected {
+    color: $white;
+    background-color: $darker-red !important;
+    a {
+      color: $white;
+    }
+  }
+
+  .ContactView {
+    :global(.btn) {
+      font-size: large;
+      text-align: left;
+      color: $dark-red;
+      background-color: $white !important;
+      text-transform: lowercase;
+      border-radius: 2px;
+      border: $dark-red 1px solid;
+      height: 10vh;
+      width: 100%;
+      a {
+        color: $darker-red;
+      }
+    }
+    :global(.btn:hover) {
+      color: $white;
+      background-color: $darker-red !important;
+      a {
+        color: $white;
+      }
+    }
+  }
+}

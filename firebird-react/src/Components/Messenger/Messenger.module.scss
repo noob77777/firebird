@@ -1,0 +1,42 @@
+@import "../../common.module.scss";
+
+.Messenger {
+  height: 100vh;
+  width: 100vw;
+  background-color: $md-blue;
+  @media only screen and (max-width: 600px) {
+    padding-top: 0;
+  }
+  padding-top: 5vh;
+  .messengerContainer {
+    @media only screen and (max-width: 600px) {
+      height: 100vh;
+      width: 100vw;
+      margin: 0;
+    }
+    margin: auto;
+    height: 90vh;
+    width: 90vw;
+    background-color: $white;
+  }
+  .cborder {
+    border-right: 3px $dark-red solid;
+    height: 100%;
+  }
+  .header {
+    background-color: $dark-blue;
+    color: $dark-red;
+    margin-bottom: 0;
+  }
+  :global(.sidenav) {
+    width: 70vw;
+  }
+  .sidenavIcon {
+    background-color: $dark-blue;
+    i {
+      color: $dark-red;
+    }
+    margin-bottom: 0;
+    margin-top: 0;
+  }
+}

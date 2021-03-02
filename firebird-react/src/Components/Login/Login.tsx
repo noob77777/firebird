@@ -160,7 +160,7 @@ const Login = (): JSX.Element => {
               </div>
             </div>
             <div className="row">
-              <div className="col s4 offset-s2 center">
+              <div className="col s3 offset-s3 center">
                 <button
                   className={styles.submitbtn + " btn"}
                   onClick={onSignIn}
@@ -168,7 +168,7 @@ const Login = (): JSX.Element => {
                   Sign In
                 </button>
               </div>
-              <div className="col s4 center">
+              <div className="col s3 center">
                 <button
                   className={styles.submitbtn + " btn"}
                   onClick={onSignUp}
