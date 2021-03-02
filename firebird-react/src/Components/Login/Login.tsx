@@ -43,6 +43,7 @@ const Login = (): JSX.Element => {
     const hash = state.auth.hash;
     if (hash) {
       try {
+        setErrorMessage("Signing you in...");
         const res = await API.post("/api/validateUser", {
           userName: USER_PREFIX + userName,
           hash: hash,
@@ -54,13 +55,18 @@ const Login = (): JSX.Element => {
             sessionKey: res.data.sessionKey,
           },
         });
+        setErrorMessage("");
       } catch (err) {
-        switch (err.response.status) {
-          case 401:
-            setErrorMessage("Authentication failed");
-            break;
-          default:
-            setErrorMessage("Cannot contact server. Try again");
+        if (err.response) {
+          switch (err.response.status) {
+            case 401:
+              setErrorMessage("Authentication failed");
+              break;
+            default:
+              setErrorMessage("Something went wrong. Try again");
+          }
+        } else {
+          setErrorMessage("Could not contact server. Try again");
         }
       }
     } else {
@@ -76,6 +82,7 @@ const Login = (): JSX.Element => {
     const privateKey = key.exportKey("private");
     const hash = crypto.createHash("sha256").update(privateKey).digest("hex");
     try {
+      setErrorMessage("Creating new user...");
       const res = await API.post("/api/createUser", {
         userName: USER_PREFIX + userName,
         hash: hash,
@@ -92,34 +99,85 @@ const Login = (): JSX.Element => {
           userName: res.data.userName,
         },
       });
+      setErrorMessage("User created");
     } catch (err) {
-      switch (err.response.status) {
-        case 401:
-          setErrorMessage("User already exists");
-          break;
-        default:
-          setErrorMessage("Cannot contact server. Try again");
+      if (err.response) {
+        switch (err.response.status) {
+          case 401:
+            setErrorMessage("User already exists");
+            break;
+          default:
+            setErrorMessage("Something went wrong. Try again");
+        }
+      } else {
+        setErrorMessage("Could not contact server. Try again.");
       }
     }
   };
 
   return (
     <div className={styles.Login}>
-      <form>
-        <input
-          id="user"
-          type="text"
-          className="validate"
-          onChange={(e) => {
-            setUserName(e.target.value);
-          }}
-          value={userName}
-        />
-        <label htmlFor="user">Username: </label>
-        <button onClick={onSignIn}>Sign In</button>
-        <button onClick={onSignUp}>Sign Up</button>
-        {errorMessage}
-      </form>
+      <div className={styles.loginContainer + " row"}>
+        <div className={styles.banner + " col l8 m6 s1 valign-wrapper"}>
+          <div className="col m11 offset-m1 hide-on-small-only">
+            <h1>Introducing firebird.</h1>
+            <h5>A Fast end-to-end Encrypted Messenger</h5>
+            <p>
+              No more remembering passwords. <br />
+              Password-less authentication using asymmetric key pairs for one
+              tap <br />
+              login and signing up. <br />
+            </p>
+            <p>
+              All user information is persisted client-side. <br />
+            </p>
+          </div>
+        </div>
+        <div className={styles.loginForm + " col l4 m6 s11 valign-wrapper"}>
+          <form className={styles.formMain}>
+            <div className={styles.loginHeader + " row"}>
+              <h1>firebird</h1>
+              <h6>Secured by RSA end-to-end Encryption</h6>
+            </div>
+            <div className="row">
+              <div className="input-field col s8 offset-s2">
+                <input
+                  id="user"
+                  type="text"
+                  className="validate"
+                  onChange={(e) => {
+                    setUserName(e.target.value);
+                    setErrorMessage("");
+                  }}
+                  value={userName}
+                />
+                <label htmlFor="user">Username: </label>
+                <span className={styles.error + " helper-text"}>
+                  {errorMessage}
+                </span>
+              </div>
+            </div>
+            <div className="row">
+              <div className="col s4 offset-s2 center">
+                <button
+                  className={styles.submitbtn + " btn"}
+                  onClick={onSignIn}
+                >
+                  Sign In
+                </button>
+              </div>
+              <div className="col s4 center">
+                <button
+                  className={styles.submitbtn + " btn"}
+                  onClick={onSignUp}
+                >
+                  Sign Up
+                </button>
+              </div>
+            </div>
+          </form>
+        </div>
+      </div>
     </div>
   );
 };

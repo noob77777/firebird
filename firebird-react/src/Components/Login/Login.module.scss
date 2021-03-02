@@ -3,5 +3,66 @@
 .Login {
   height: 100vh;
   width: 100vw;
-  //   background-color: $dark-blue;
+  .loginContainer {
+    // border: 2px $dark-red solid;
+    margin: 0;
+  }
+  .loginForm {
+    background-color: $white;
+    height: 100vh;
+    margin: 0;
+    border-left: 3px $dark-red solid;
+    .formMain {
+      // border: 2px $dark-red solid;
+      width: 100%;
+    }
+  }
+  .loginHeader {
+    text-align: center;
+  }
+  .banner {
+    background-color: $dark-blue;
+    height: 100vh;
+    margin: 0;
+    color: $dark-red;
+    // border: 2px $dark-red solid;
+  }
+  .error {
+    color: $red;
+  }
+
+  // /* label color */
+  // :global(.input-field label) {
+  //   color: $dark-red;
+  // }
+  /* label focus color */
+  :global(.input-field input[type="text"]:focus + label) {
+    color: $dark-red;
+  }
+  /* label underline focus color */
+  :global(.input-field input[type="text"]:focus) {
+    border-bottom: 1px solid $dark-red;
+    box-shadow: 0 1px 0 0 $dark-red;
+  }
+  /* valid color */
+  :global(.input-field input[type="text"].valid) {
+    border-bottom: 1px solid $dark-red;
+    box-shadow: 0 1px 0 0 $dark-red;
+  }
+  /* invalid color */
+  :global(.input-field input[type="text"].invalid) {
+    border-bottom: 1px solid $dark-red;
+    box-shadow: 0 1px 0 0 $dark-red;
+  }
+  /* icon prefix focus color */
+  :global(.input-field .prefix.active) {
+    color: $dark-red;
+  }
+
+  .submitbtn {
+    background-color: $red !important;
+  }
+  .submitbtn:hover {
+    background-color: $darker-red !important;
+  }
 }
