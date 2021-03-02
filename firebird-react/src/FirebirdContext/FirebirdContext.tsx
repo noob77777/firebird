@@ -1,5 +1,4 @@
 import { createContext, Dispatch, useReducer } from "react";
-import { PRIVATE_KEY_SUFFIX, PUBLIC_KEY_SUFFIX } from "../constants";
 import ActionTypes from "./ActionTypes";
 
 export interface User {
@@ -28,6 +27,7 @@ export interface Message {
   sender: string;
   receiver: string;
   body: any;
+  status: string;
 }
 
 export const isMessage = (o: any): o is Message => {
@@ -102,19 +102,17 @@ export const FirebirdContextReducer = (
 ): FirebirdState => {
   switch (action.type) {
     case ActionTypes.SIGN_UP:
-      localStorage.setItem(
-        action.payload.userName + PRIVATE_KEY_SUFFIX,
-        action.payload.auth.privateKey
-      );
-      localStorage.setItem(
-        action.payload.userName + PUBLIC_KEY_SUFFIX,
-        action.payload.auth.publicKey
-      );
-      return { ...state, auth: { ...state.auth, ...action.payload.auth } };
+      return { ...state, auth: { ...state.auth, ...action.payload } };
     case ActionTypes.LOAD_RSA_KEYS:
       return { ...state, auth: { ...state.auth, ...action.payload } };
     case ActionTypes.SIGN_IN:
       return { ...state, auth: { ...state.auth, ...action.payload } };
+    case ActionTypes.LOAD_USER_LOCAL_STATE:
+      return { ...state, contacts: [...action.payload] };
+    case ActionTypes.UPDATE_CONTACTS:
+      return { ...state, contacts: [...action.payload] };
+    case ActionTypes.SET_RECEIVER:
+      return { ...state, currentReceiver: action.payload };
     default:
       return state;
   }

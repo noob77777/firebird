@@ -11,7 +11,7 @@
     background-color: $white;
     height: 100vh;
     margin: 0;
-    border-left: 3px $dark-red solid;
+    // border-left: 3px $dark-red solid;
     .formMain {
       // border: 2px $dark-red solid;
       width: 100%;
@@ -25,7 +25,7 @@
     height: 100vh;
     margin: 0;
     color: $dark-red;
-    // border: 2px $dark-red solid;
+    border-right: 3px $dark-red solid;
   }
   .error {
     color: $red;

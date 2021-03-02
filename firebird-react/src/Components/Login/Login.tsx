@@ -55,7 +55,6 @@ const Login = (): JSX.Element => {
             sessionKey: res.data.sessionKey,
           },
         });
-        setErrorMessage("");
       } catch (err) {
         if (err.response) {
           switch (err.response.status) {
@@ -88,15 +87,14 @@ const Login = (): JSX.Element => {
         hash: hash,
         publicKey: publicKey,
       });
+      localStorage.setItem(res.data.userName + PRIVATE_KEY_SUFFIX, privateKey);
+      localStorage.setItem(res.data.userName + PUBLIC_KEY_SUFFIX, publicKey);
       dispatch({
         type: ActionTypes.SIGN_UP,
         payload: {
-          auth: {
-            privateKey: privateKey,
-            publicKey: publicKey,
-            hash: hash,
-          },
-          userName: res.data.userName,
+          privateKey: privateKey,
+          publicKey: publicKey,
+          hash: hash,
         },
       });
       setErrorMessage("User created");
@@ -110,7 +108,7 @@ const Login = (): JSX.Element => {
             setErrorMessage("Something went wrong. Try again");
         }
       } else {
-        setErrorMessage("Could not contact server. Try again.");
+        setErrorMessage("Could not contact server. Try again");
       }
     }
   };
@@ -118,8 +116,12 @@ const Login = (): JSX.Element => {
   return (
     <div className={styles.Login}>
       <div className={styles.loginContainer + " row"}>
-        <div className={styles.banner + " col l8 m6 s1 valign-wrapper"}>
-          <div className="col m11 offset-m1 hide-on-small-only">
+        <div
+          className={
+            styles.banner + " col l8 m6 hide-on-small-only valign-wrapper"
+          }
+        >
+          <div className="col m11 offset-m1">
             <h1>Introducing firebird.</h1>
             <h5>A Fast end-to-end Encrypted Messenger</h5>
             <p>
@@ -133,7 +135,7 @@ const Login = (): JSX.Element => {
             </p>
           </div>
         </div>
-        <div className={styles.loginForm + " col l4 m6 s11 valign-wrapper"}>
+        <div className={styles.loginForm + " col l4 m6 s12 valign-wrapper"}>
           <form className={styles.formMain}>
             <div className={styles.loginHeader + " row"}>
               <h1>firebird</h1>

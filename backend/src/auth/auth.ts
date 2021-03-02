@@ -299,15 +299,19 @@ const joinGroup = (
           callback(false);
           return;
         }
-        if (result.length !== 0 && !result.includes(userName)) {
-          redisClient.rpush(group, userName, (errRPush) => {
-            if (errRPush) {
-              log.error(errRPush.message);
-              callback(false);
-              return;
-            }
+        if (result.length !== 0) {
+          if (!result.includes(userName)) {
+            redisClient.rpush(group, userName, (errRPush) => {
+              if (errRPush) {
+                log.error(errRPush.message);
+                callback(false);
+                return;
+              }
+              callback(true);
+            });
+          } else {
             callback(true);
-          });
+          }
         } else {
           callback(false);
         }

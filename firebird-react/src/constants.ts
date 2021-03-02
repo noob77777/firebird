@@ -6,6 +6,7 @@ export const BROADCAST_GROUP: string = "group.broadcast";
 export const USER_SERVER: string = "user.firebird";
 export const PRIVATE_KEY_SUFFIX: string = ".private.key";
 export const PUBLIC_KEY_SUFFIX: string = ".public.key";
+export const CONTACTS_SUFFIX: string = ".contacts";
 
 export const NEW_CONNECTION: string = "new_connection";
 export const SEND_MESSAGE: string = "send_message";
