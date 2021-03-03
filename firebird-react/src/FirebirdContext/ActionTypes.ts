@@ -5,6 +5,7 @@ const ActionTypes = {
   LOAD_USER_LOCAL_STATE: "LOAD_USER_LOCAL_STATE",
   UPDATE_CONTACTS: "UPDATE_CONTACTS",
   SET_RECEIVER: "SET_RECEIVER",
+  LOGOUT: "LOGOUT",
 };
 
 export default ActionTypes;

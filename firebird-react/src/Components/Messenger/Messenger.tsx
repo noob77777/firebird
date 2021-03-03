@@ -1,5 +1,5 @@
 import { useContext, useEffect } from "react";
-import { CONTACTS_SUFFIX } from "../../constants";
+import { CONTACTS_SUFFIX, SESSION_KEY } from "../../constants";
 import ActionTypes from "../../FirebirdContext/ActionTypes";
 import FirebirdContext from "../../FirebirdContext/FirebirdContext";
 import Contacts from "./Contacts/Contacts";
@@ -22,13 +22,34 @@ const Messenger = (): JSX.Element => {
     }
   }, [dispatch, state.auth.userName]);
 
+  const logout = () => {
+    const elems = document.querySelectorAll(".tooltipped");
+    elems.forEach((elem) => {
+      const instance = M.Tooltip.getInstance(elem);
+      instance.close();
+    });
+    sessionStorage.removeItem(SESSION_KEY);
+    dispatch({ type: ActionTypes.LOGOUT, payload: null });
+  };
+
   return (
     <div className={styles.Messenger}>
       <div className="hide-on-med-and-up">
-        <div id="slide-out" className={styles.bgblue + " sidenav"}>
+        <div id="slide-out" className={styles.sidenav + " sidenav"}>
           <div className={styles.header + " row"}>
-            <div className="col s12">
+            <div className="col m11 s10">
               <h2>firebird</h2>
+            </div>
+            <div className={styles.logout + " col  m1 s2"}>
+              <a
+                href="#react"
+                className="tooltipped"
+                data-position="bottom"
+                data-tooltip="Logout"
+                onClick={logout}
+              >
+                <i className="material-icons">exit_to_app</i>
+              </a>
             </div>
           </div>
           <Contacts name="sidenav" />
@@ -37,8 +58,19 @@ const Messenger = (): JSX.Element => {
       <div className={styles.messengerContainer + " row"}>
         <div className={styles.cborder + " col l4 m6 hide-on-small-only"}>
           <div className={styles.header + " row"}>
-            <div className="col s12">
+            <div className="col m11 s10">
               <h2>firebird</h2>
+            </div>
+            <div className={styles.logout + " col m1 s2"}>
+              <a
+                href="#react"
+                className="tooltipped"
+                data-position="bottom"
+                data-tooltip="Logout"
+                onClick={logout}
+              >
+                <i className="material-icons">exit_to_app</i>
+              </a>
             </div>
           </div>
           <Contacts name="main" />

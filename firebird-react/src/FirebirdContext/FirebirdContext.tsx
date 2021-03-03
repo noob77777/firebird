@@ -60,6 +60,7 @@ export interface FirebirdState {
   };
   contacts: Contact[];
   currentReceiver: string | null;
+  modalText: string | null;
 }
 
 export const isFirebirdState = (o: any): o is FirebirdState => {
@@ -89,6 +90,7 @@ const initState: FirebirdState = {
   },
   contacts: [],
   currentReceiver: null,
+  modalText: null,
 };
 
 const FirebirdContext = createContext<{
@@ -113,6 +115,8 @@ export const FirebirdContextReducer = (
       return { ...state, contacts: [...action.payload] };
     case ActionTypes.SET_RECEIVER:
       return { ...state, currentReceiver: action.payload };
+    case ActionTypes.LOGOUT:
+      return { ...state, auth: { ...state.auth, sessionKey: action.payload } };
     default:
       return state;
   }

@@ -3,6 +3,8 @@
 .Messenger {
   height: 100vh;
   width: 100vw;
+  overflow-y: hidden;
+  overflow-x: hidden;
   background-color: $md-blue;
   @media only screen and (max-width: 600px) {
     padding-top: 0;
@@ -24,14 +26,23 @@
     height: 100%;
     background-color: $dark-blue;
   }
-  .bgblue {
-    height: 100%;
+  .sidenav {
+    max-height: 100vh;
     background-color: $dark-blue;
+    overflow-y: hidden;
+    overflow-x: hidden;
   }
   .header {
     background-color: $dark-blue;
     color: $dark-red;
     margin-bottom: 0;
+  }
+  .logout {
+    padding-top: 10px;
+    text-align: center;
+    a {
+      color: $dark-red;
+    }
   }
   :global(.sidenav) {
     width: 80vw;

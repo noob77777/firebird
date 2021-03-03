@@ -8,6 +8,7 @@ import FirebirdContext, {
   isGroup,
   isUser,
 } from "../../../FirebirdContext/FirebirdContext";
+import { modalNotify } from "../../Modal/Modal";
 import styles from "./Contacts.module.scss";
 
 const Contacts = (props: any): JSX.Element => {
@@ -65,13 +66,13 @@ const Contacts = (props: any): JSX.Element => {
       if (err.response) {
         switch (err.response.status) {
           case 401:
-            console.log("Invalid username");
+            modalNotify("Invalid username.");
             break;
           default:
-            console.log("Something went wrong. Try again");
+            modalNotify("Something went wrong. Try again.");
         }
       } else {
-        console.log("Could not contact server. Try again");
+        modalNotify("Could not contact server. Try again.");
       }
     }
   };
@@ -119,13 +120,13 @@ const Contacts = (props: any): JSX.Element => {
       if (err.response) {
         switch (err.response.status) {
           case 401:
-            console.log("Group already exists");
+            modalNotify("Group already exists.");
             break;
           default:
-            console.log("Something went wrong. Try again");
+            modalNotify("Something went wrong. Try again.");
         }
       } else {
-        console.log("Could not contact server. Try again");
+        modalNotify("Could not contact server. Try again.");
       }
     }
   };
@@ -162,13 +163,13 @@ const Contacts = (props: any): JSX.Element => {
       if (err.response) {
         switch (err.response.status) {
           case 401:
-            console.log("Group does not exist");
+            modalNotify("Group does not exist");
             break;
           default:
-            console.log("Something went wrong. Try again");
+            modalNotify("Something went wrong. Try again.");
         }
       } else {
-        console.log("Could not contact server. Try again");
+        modalNotify("Could not contact server. Try again.");
       }
     }
   };
@@ -191,7 +192,7 @@ const Contacts = (props: any): JSX.Element => {
               );
             }}
           >
-            <i className="large material-icons left">
+            <i className={styles.userIcon + " large material-icons left"}>
               {isUser(contact.user) ? "account_circle" : "group"}
             </i>
             {isUser(contact.user)
@@ -235,7 +236,7 @@ const Contacts = (props: any): JSX.Element => {
               <label htmlFor={props.name}>Search</label>
             </div>
           </div>
-          <div className="row">
+          <div className={styles.borderbtm + " row"}>
             <div className="col s12 m10 offset-m1">
               <div className="row">
                 <div className="col s4 center">

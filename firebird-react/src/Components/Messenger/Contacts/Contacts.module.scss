@@ -1,6 +1,8 @@
 @import "../../../common.module.scss";
 
 .Contacts {
+  .borderbtm {
+  }
   /* label color */
   :global(.input-field label) {
     color: $dark-red;
@@ -82,6 +84,11 @@
       width: 100%;
       a {
         color: $darker-red;
+      }
+    }
+    button {
+      .userIcon {
+        font-size: 2rem;
       }
     }
     :global(.btn:hover) {

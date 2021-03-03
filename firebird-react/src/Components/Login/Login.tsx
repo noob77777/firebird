@@ -8,6 +8,7 @@ import ActionTypes from "../../FirebirdContext/ActionTypes";
 import {
   PRIVATE_KEY_SUFFIX,
   PUBLIC_KEY_SUFFIX,
+  SESSION_KEY,
   USER_PREFIX,
 } from "../../constants";
 
@@ -48,6 +49,14 @@ const Login = (): JSX.Element => {
           userName: USER_PREFIX + userName,
           hash: hash,
         });
+        sessionStorage.setItem(
+          SESSION_KEY,
+          JSON.stringify({
+            ...state.auth,
+            sessionKey: res.data.sessionKey,
+            userName: res.data.userName,
+          })
+        );
         dispatch({
           type: ActionTypes.SIGN_IN,
           payload: {
@@ -59,17 +68,17 @@ const Login = (): JSX.Element => {
         if (err.response) {
           switch (err.response.status) {
             case 401:
-              setErrorMessage("Authentication failed");
+              setErrorMessage("Authentication failed.");
               break;
             default:
-              setErrorMessage("Something went wrong. Try again");
+              setErrorMessage("Something went wrong. Try again.");
           }
         } else {
-          setErrorMessage("Could not contact server. Try again");
+          setErrorMessage("Could not contact server. Try again.");
         }
       }
     } else {
-      setErrorMessage("RSA credentials not found in local storage");
+      setErrorMessage("RSA credentials not found in local storage.");
     }
   };
 
@@ -97,18 +106,18 @@ const Login = (): JSX.Element => {
           hash: hash,
         },
       });
-      setErrorMessage("User created");
+      setErrorMessage("User created.");
     } catch (err) {
       if (err.response) {
         switch (err.response.status) {
           case 401:
-            setErrorMessage("User already exists");
+            setErrorMessage("User already exists.");
             break;
           default:
-            setErrorMessage("Something went wrong. Try again");
+            setErrorMessage("Something went wrong. Try again.");
         }
       } else {
-        setErrorMessage("Could not contact server. Try again");
+        setErrorMessage("Could not contact server. Try again.");
       }
     }
   };
