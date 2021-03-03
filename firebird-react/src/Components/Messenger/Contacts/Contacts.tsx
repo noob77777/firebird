@@ -10,7 +10,7 @@ import FirebirdContext, {
 } from "../../../FirebirdContext/FirebirdContext";
 import styles from "./Contacts.module.scss";
 
-const Contacts = (): JSX.Element => {
+const Contacts = (props: any): JSX.Element => {
   const { state, dispatch } = useContext(FirebirdContext);
   const [search, setSearch] = useState("");
   const [filteredContacts, setFilteredContacts] = useState(state.contacts);
@@ -173,12 +173,16 @@ const Contacts = (): JSX.Element => {
     }
   };
 
-  const ContactView = (contact: Contact, index: number): JSX.Element => {
+  const ContactView = (
+    contact: Contact,
+    index: number,
+    selected: boolean
+  ): JSX.Element => {
     return (
       <li key={index} className={styles.ContactView}>
         <div>
           <button
-            className="btn"
+            className={(selected ? styles.contactSelected : "") + " btn"}
             onClick={() => {
               setCurrentReceiver(
                 isUser(contact.user)
@@ -216,59 +220,67 @@ const Contacts = (): JSX.Element => {
     <div className={styles.Contacts}>
       <div className="row">
         <div className="col s12">
-          <div className={styles.btngrp}>
-            <div className={styles.search + " row"}>
-              <div className="col s10 offset-s1">
-                <div className="input-field">
-                  <i className="material-icons prefix">search</i>
-                  <input
-                    id="search"
-                    type="text"
-                    className="validate"
-                    onChange={(e) => {
-                      setSearch(e.target.value);
-                    }}
-                    value={search}
-                  />
-                </div>
-              </div>
+          <div className="row">
+            <div className="col s12 m10 offset-m1 input-field">
+              <i className="material-icons prefix">search</i>
+              <input
+                id={props.name}
+                type="text"
+                className="validate"
+                onChange={(e) => {
+                  setSearch(e.target.value);
+                }}
+                value={search}
+              />
+              <label htmlFor={props.name}>Search</label>
             </div>
-            <div className="row">
-              <div className="col s4 center">
-                <button
-                  type="button"
-                  className={styles.btn + " btn"}
-                  onClick={() => {
-                    addContact(search);
-                  }}
-                >
-                  Add Contact
-                </button>
-              </div>
-              <div className="col s4 center">
-                <button
-                  type="button"
-                  className={styles.btn + " btn"}
-                  onClick={() => createGroup(search)}
-                >
-                  Create Group
-                </button>
-              </div>
-              <div className="col s4 center">
-                <button
-                  type="button"
-                  className={styles.btn + " btn"}
-                  onClick={() => joinGroup(search)}
-                >
-                  Join Group
-                </button>
+          </div>
+          <div className="row">
+            <div className="col s12 m10 offset-m1">
+              <div className="row">
+                <div className="col s4 center">
+                  <button
+                    type="button"
+                    className={styles.btn + " btn btn-small"}
+                    onClick={() => {
+                      addContact(search);
+                    }}
+                  >
+                    Add Contact
+                  </button>
+                </div>
+                <div className="col s4 center">
+                  <button
+                    type="button"
+                    className={styles.btn + " btn btn-small"}
+                    onClick={() => createGroup(search)}
+                  >
+                    Create Group
+                  </button>
+                </div>
+                <div className="col s4 center">
+                  <button
+                    type="button"
+                    className={styles.btn + " btn btn-small"}
+                    onClick={() => joinGroup(search)}
+                  >
+                    Join Group
+                  </button>
+                </div>
               </div>
             </div>
           </div>
           <ul className={styles.list}>
             {filteredContacts.length ? (
               filteredContacts.map((contact, index) =>
-                ContactView(contact, index)
+                ContactView(
+                  contact,
+                  index,
+                  state.currentReceiver ===
+                    (isUser(contact.user)
+                      ? contact.user.userName
+                      : contact.user.groupName)
+                )
               )
             ) : (
               <div className={styles.vh60 + " valign-wrapper center-align"}>

@@ -1,10 +1,19 @@
 @import "../../../common.module.scss";
 
 .Contacts {
-  // /* label color */
-  // :global(.input-field label) {
-  //   color: $dark-red;
-  // }
+  /* label color */
+  :global(.input-field label) {
+    color: $dark-red;
+  }
+
+  :global(.input-field input[type="text"]) {
+    color: $dark-red;
+    border-bottom: 1px solid $dark-red;
+    box-shadow: 0 1px 0 0 $dark-red;
+  }
+  :global(.input-field) {
+    color: $dark-red;
+  }
   /* label focus color */
   :global(.input-field input[type="text"]:focus + label) {
     color: $dark-red;
@@ -39,26 +48,25 @@
     background-color: $darker-red !important;
   }
 
+  .btn {
+    padding-right: 5px;
+    padding-left: 5px;
+  }
+
   .list {
     max-height: 60vh;
     overflow-y: scroll;
+    scrollbar-width: 0;
   }
 
   .vh60 {
     height: 60vh;
     text-align: center;
+    color: $dark-red;
   }
 
   .ncpfcenter {
     width: 100%;
-  }
-
-  .contactSelected {
-    color: $white;
-    background-color: $darker-red !important;
-    a {
-      color: $white;
-    }
   }
 
   .ContactView {
@@ -66,7 +74,7 @@
       font-size: large;
       text-align: left;
       color: $dark-red;
-      background-color: $white !important;
+      background-color: $m2-blue !important;
       text-transform: lowercase;
       border-radius: 2px;
       border: $dark-red 1px solid;
@@ -77,6 +85,13 @@
       }
     }
     :global(.btn:hover) {
+      color: $white;
+      background-color: $darker-red !important;
+      a {
+        color: $white;
+      }
+    }
+    .contactSelected {
       color: $white;
       background-color: $darker-red !important;
       a {

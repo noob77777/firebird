@@ -25,13 +25,13 @@ const Messenger = (): JSX.Element => {
   return (
     <div className={styles.Messenger}>
       <div className="hide-on-med-and-up">
-        <div id="slide-out" className="sidenav">
+        <div id="slide-out" className={styles.bgblue + " sidenav"}>
           <div className={styles.header + " row"}>
             <div className="col s12">
               <h2>firebird</h2>
             </div>
           </div>
-          <Contacts />
+          <Contacts name="sidenav" />
         </div>
       </div>
       <div className={styles.messengerContainer + " row"}>
@@ -41,7 +41,7 @@ const Messenger = (): JSX.Element => {
               <h2>firebird</h2>
             </div>
           </div>
-          <Contacts />
+          <Contacts name="main" />
         </div>
         <div className="col l8 m6 s12">
           <div className={styles.sidenavIcon + " row hide-on-med-and-up"}>
