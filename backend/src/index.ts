@@ -184,6 +184,30 @@ app.post("/api/joinGroup", (req, res) => {
   }
 });
 
+app.get("/api/userActive", (req, res) => {
+  const userName = req.query.userName;
+  const sessionKey = req.query.sessionKey;
+  const user = req.query.user;
+  if (
+    typeof userName === "string" &&
+    typeof sessionKey === "string" &&
+    typeof user === "string"
+  ) {
+    messenger.getUserActive(userName, sessionKey, user, (active) => {
+      if (active !== null) {
+        res.status(200);
+        res.json({ message: "OK", user, active });
+      } else {
+        res.status(401);
+        res.json({ message: "Permission Denied" });
+      }
+    });
+  } else {
+    res.status(400);
+    res.json({ message: "Invalid Arguments" });
+  }
+})
+
 io.attach(serverHTTP);
 io.attach(serverHTTPS);
 

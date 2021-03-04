@@ -5,6 +5,7 @@ import {
   QUEUE_SUFFIX,
   RECV_MESSAGE,
   TYPE_ACK,
+  TYPE_IMAGE,
   USER_SERVER,
   USER_STATE_CHANGE,
 } from "../constants";
@@ -214,7 +215,11 @@ const sendMessageSingleUser = (
     io.to(socketId).emit(RECV_MESSAGE, JSON.stringify(message));
     callback(true);
   } else {
-    enQueueMessage(receiver, message, callback);
+    if (message.type !== TYPE_IMAGE) {
+      enQueueMessage(receiver, message, callback);
+    } else {
+      callback(false);
+    }
   }
 };
 
@@ -262,6 +267,28 @@ const sendMessage = (
   });
 };
 
+/**
+ * [secure]
+ * @param userName
+ * @param sessionKey
+ * @param user
+ * @param callback
+ */
+const getUserActive = (
+  userName: string,
+  sessionKey: string,
+  user: string,
+  callback: (active: boolean | null) => void
+): void => {
+  auth.validateSession(userName, sessionKey, (success) => {
+    if (success) {
+      callback(messengerState.isUserActive(user));
+    } else {
+      callback(null);
+    }
+  });
+};
+
 const messenger = {
   pendingMessages,
   sendMessage,
@@ -269,6 +296,7 @@ const messenger = {
   addClient,
   removeClient,
   getClient,
+  getUserActive,
 };
 
 export default messenger;
