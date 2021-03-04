@@ -1,5 +1,4 @@
-import { useContext, useEffect } from "react";
-import { CONTACTS_SUFFIX, SESSION_KEY } from "../../constants";
+import { useContext } from "react";
 import ActionTypes from "../../FirebirdContext/ActionTypes";
 import FirebirdContext from "../../FirebirdContext/FirebirdContext";
 import Contacts from "./Contacts/Contacts";
@@ -7,20 +6,7 @@ import MessengerMain from "./MessengerMain/MessengerMain";
 import styles from "./Messenger.module.scss";
 
 const Messenger = (): JSX.Element => {
-  const { state, dispatch } = useContext(FirebirdContext);
-
-  useEffect(() => {
-    if (state.auth.userName) {
-      const data = localStorage.getItem(state.auth.userName + CONTACTS_SUFFIX);
-      if (data) {
-        const contacts = JSON.parse(data);
-        dispatch({
-          type: ActionTypes.LOAD_USER_LOCAL_STATE,
-          payload: contacts,
-        });
-      }
-    }
-  }, [dispatch, state.auth.userName]);
+  const { dispatch } = useContext(FirebirdContext);
 
   const logout = () => {
     const elems = document.querySelectorAll(".tooltipped");
@@ -28,7 +14,6 @@ const Messenger = (): JSX.Element => {
       const instance = M.Tooltip.getInstance(elem);
       instance.close();
     });
-    sessionStorage.removeItem(SESSION_KEY);
     dispatch({ type: ActionTypes.LOGOUT, payload: null });
   };
 

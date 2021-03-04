@@ -99,7 +99,7 @@ const testSocketConnect = (userName, key) => {
       .digest("hex"),
     type: "text",
     sender: userName,
-    receiver: "group.broadcast",
+    receiver: "user.user7",
     body: "Hello",
   };
   console.log("send_message: " + JSON.stringify(message));
@@ -126,7 +126,7 @@ const runTest = (userName, hash, test) => {
 // runTest("user.u1", "hash", testGetPendingMessages);
 // runTest("user.u2", "hash", testGetPendingMessages);
 // runTest("user.u2", "hash", testSocketConnect);
-// runTest("user.u1", "hash", testSocketConnect);
+runTest("user.u1", "hash", testSocketConnect);
 // runTest("user.u1", "hash", testCreateGroup);
 // runTest("user.u2", "hash", testJoinGroup);
 // runTest("user.u1", "hash", testGetGroupMembers);

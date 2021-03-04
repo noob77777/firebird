@@ -1,4 +1,10 @@
 import { createContext, Dispatch, useReducer } from "react";
+import {
+  CONTACTS_SUFFIX,
+  PRIVATE_KEY_SUFFIX,
+  PUBLIC_KEY_SUFFIX,
+  SESSION_KEY,
+} from "../constants";
 import ActionTypes from "./ActionTypes";
 
 export interface User {
@@ -27,7 +33,7 @@ export interface Message {
   sender: string;
   receiver: string;
   body: any;
-  status: string;
+  status?: string;
 }
 
 export const isMessage = (o: any): o is Message => {
@@ -60,7 +66,6 @@ export interface FirebirdState {
   };
   contacts: Contact[];
   currentReceiver: string | null;
-  modalText: string | null;
 }
 
 export const isFirebirdState = (o: any): o is FirebirdState => {
@@ -90,7 +95,6 @@ const initState: FirebirdState = {
   },
   contacts: [],
   currentReceiver: null,
-  modalText: null,
 };
 
 const FirebirdContext = createContext<{
@@ -104,6 +108,14 @@ export const FirebirdContextReducer = (
 ): FirebirdState => {
   switch (action.type) {
     case ActionTypes.SIGN_UP:
+      localStorage.setItem(
+        action.payload.userName + PRIVATE_KEY_SUFFIX,
+        action.payload.privateKey
+      );
+      localStorage.setItem(
+        action.payload.userName + PUBLIC_KEY_SUFFIX,
+        action.payload.publicKey
+      );
       return { ...state, auth: { ...state.auth, ...action.payload } };
     case ActionTypes.LOAD_RSA_KEYS:
       return { ...state, auth: { ...state.auth, ...action.payload } };
@@ -112,10 +124,53 @@ export const FirebirdContextReducer = (
     case ActionTypes.LOAD_USER_LOCAL_STATE:
       return { ...state, contacts: [...action.payload] };
     case ActionTypes.UPDATE_CONTACTS:
+      localStorage.setItem(
+        state.auth.userName + CONTACTS_SUFFIX,
+        JSON.stringify(action.payload)
+      );
       return { ...state, contacts: [...action.payload] };
     case ActionTypes.SET_RECEIVER:
-      return { ...state, currentReceiver: action.payload };
+      const contacts = state.contacts.map((contact) => {
+        if (
+          isUser(contact.user) &&
+          contact.user.userName === action.payload.currentReceiver
+        ) {
+          return {
+            ...contact,
+            user: {
+              ...contact.user,
+              publicKey: action.payload.publicKey
+                ? action.payload.publicKey
+                : contact.user.publicKey,
+              active: action.payload.active,
+            },
+          };
+        } else if (
+          isGroup(contact.user) &&
+          contact.user.groupName === action.payload.currentReceiver
+        ) {
+          return {
+            ...contact,
+            user: {
+              ...contact.user,
+              members: [...action.payload.members],
+            },
+          };
+        } else {
+          return contact;
+        }
+      });
+      localStorage.setItem(
+        state.auth.userName + CONTACTS_SUFFIX,
+        JSON.stringify(contacts)
+      );
+      return {
+        ...state,
+        currentReceiver: action.payload.currentReceiver,
+        contacts,
+      };
     case ActionTypes.LOGOUT:
+      sessionStorage.removeItem(SESSION_KEY);
       return { ...state, auth: { ...state.auth, sessionKey: action.payload } };
     default:
       return state;

@@ -18,3 +18,7 @@ export const USER_STATE_CHANGE: string = "user_state_change";
 export const TYPE_TEXT: string = "text";
 export const TYPE_ACK: string = "ack";
 export const TYPE_IMAGE: string = "image";
+
+export const MESSAGE_PENDING: string = "message_pending";
+export const MESSAGE_SENT: string = "message_sent";
+export const MESSAGE_ACKED: string = "message_acked";

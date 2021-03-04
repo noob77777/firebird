@@ -206,7 +206,7 @@ app.get("/api/userActive", (req, res) => {
     res.status(400);
     res.json({ message: "Invalid Arguments" });
   }
-})
+});
 
 io.attach(serverHTTP);
 io.attach(serverHTTPS);
@@ -224,11 +224,7 @@ io.on("connection", (client) => {
   });
 
   client.on("disconnect", () => {
-    const userName = messenger.getClient(client.id);
     messenger.removeClient(client.id);
-    if (userName) {
-      auth.removeSession(userName);
-    }
   });
 
   client.on(SEND_MESSAGE, (data: any) => {

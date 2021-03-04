@@ -1,6 +1,6 @@
 import { useContext, useEffect, useState } from "react";
 import API from "../../../API/API";
-import { CONTACTS_SUFFIX, GROUP_PREFIX, USER_PREFIX } from "../../../constants";
+import { GROUP_PREFIX, USER_PREFIX } from "../../../constants";
 import ActionTypes from "../../../FirebirdContext/ActionTypes";
 import FirebirdContext, {
   Contact,
@@ -57,10 +57,6 @@ const Contacts = (props: any): JSX.Element => {
       };
       const contacts = state.contacts;
       contacts.push(contact);
-      localStorage.setItem(
-        state.auth.userName + CONTACTS_SUFFIX,
-        JSON.stringify(contacts)
-      );
       dispatch({ type: ActionTypes.UPDATE_CONTACTS, payload: contacts });
     } catch (err) {
       if (err.response) {
@@ -86,15 +82,93 @@ const Contacts = (props: any): JSX.Element => {
       }
       return true;
     });
-    localStorage.setItem(
-      state.auth.userName + CONTACTS_SUFFIX,
-      JSON.stringify(contacts)
-    );
     dispatch({ type: ActionTypes.UPDATE_CONTACTS, payload: contacts });
   };
 
-  const setCurrentReceiver = (user: string) => {
-    dispatch({ type: ActionTypes.SET_RECEIVER, payload: user });
+  const setCurrentReceiver = async (user: string) => {
+    let active: boolean = false;
+    let publicKey: string | null = null;
+    let members: string[] = [];
+    const contacts = state.contacts.filter((x) => {
+      if (isUser(x.user) && x.user.userName === user) {
+        return true;
+      } else if (isGroup(x.user) && x.user.groupName === user) {
+        return true;
+      }
+      return false;
+    });
+    if (contacts.length) {
+      const contact = contacts[0];
+      if (isUser(contact.user)) {
+        if (contact.user.publicKey === null) {
+          try {
+            const res = await API.get(
+              `/api/publicKey?userName=${state.auth.userName}&sessionKey=${state.auth.sessionKey}&user=${user}`
+            );
+            publicKey = res.data.publicKey;
+          } catch (err) {
+            if (err.response) {
+              switch (err.response) {
+                case 401:
+                  modalNotify(
+                    "Session key may have expired, please login again."
+                  );
+                  break;
+                default:
+                  modalNotify("Something went wrong. Try again.");
+              }
+            } else {
+              modalNotify("Could not contact contact server.");
+            }
+          }
+        }
+        try {
+          const res = await API.get(
+            `/api/userActive?userName=${state.auth.userName}&sessionKey=${state.auth.sessionKey}&user=${user}`
+          );
+          active = res.data.active;
+        } catch (err) {
+          if (err.response) {
+            switch (err.response) {
+              case 401:
+                modalNotify(
+                  "Session key may have expired, please login again."
+                );
+                break;
+              default:
+                modalNotify("Something went wrong. Try again.");
+            }
+          } else {
+            modalNotify("Could not contact contact server.");
+          }
+        }
+      } else {
+        try {
+          const res = await API.get(
+            `/api/groupMembers?userName=${state.auth.userName}&sessionKey=${state.auth.sessionKey}&groupName=${user}`
+          );
+          members = res.data.groupMembers;
+        } catch (err) {
+          if (err.response) {
+            switch (err.response) {
+              case 401:
+                modalNotify(
+                  "Session key may have expired, please login again."
+                );
+                break;
+              default:
+                modalNotify("Something went wrong. Try again.");
+            }
+          } else {
+            modalNotify("Could not contact contact server.");
+          }
+        }
+      }
+    }
+    dispatch({
+      type: ActionTypes.SET_RECEIVER,
+      payload: { currentReceiver: user, active, publicKey, members },
+    });
   };
 
   const createGroup = async (group: string) => {
@@ -111,10 +185,6 @@ const Contacts = (props: any): JSX.Element => {
       }
       const contacts = state.contacts;
       contacts.push({ user: newGroup, messages: [] });
-      localStorage.setItem(
-        state.auth.userName + CONTACTS_SUFFIX,
-        JSON.stringify(contacts)
-      );
       dispatch({ type: ActionTypes.UPDATE_CONTACTS, payload: contacts });
     } catch (err) {
       if (err.response) {
@@ -154,10 +224,6 @@ const Contacts = (props: any): JSX.Element => {
       };
       const contacts = state.contacts;
       contacts.push({ user: newGroup, messages: [] });
-      localStorage.setItem(
-        state.auth.userName + CONTACTS_SUFFIX,
-        JSON.stringify(contacts)
-      );
       dispatch({ type: ActionTypes.UPDATE_CONTACTS, payload: contacts });
     } catch (err) {
       if (err.response) {

@@ -96,11 +96,10 @@ const Login = (): JSX.Element => {
         hash: hash,
         publicKey: publicKey,
       });
-      localStorage.setItem(res.data.userName + PRIVATE_KEY_SUFFIX, privateKey);
-      localStorage.setItem(res.data.userName + PUBLIC_KEY_SUFFIX, publicKey);
       dispatch({
         type: ActionTypes.SIGN_UP,
         payload: {
+          userName: res.data.userName,
           privateKey: privateKey,
           publicKey: publicKey,
           hash: hash,
