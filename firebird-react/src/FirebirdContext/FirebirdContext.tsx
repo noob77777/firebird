@@ -1,4 +1,5 @@
 import { createContext, Dispatch, useReducer } from "react";
+import { addMessages } from "../Components/Messenger/MessengerMain/MessengerMain";
 import {
   CONTACTS_SUFFIX,
   PRIVATE_KEY_SUFFIX,
@@ -167,8 +168,32 @@ export const FirebirdContextReducer = (
       return {
         ...state,
         currentReceiver: action.payload.currentReceiver,
-        contacts,
+        contacts: contacts,
       };
+    case ActionTypes.NEW_MESSAGE:
+      const contactsNM = addMessages(
+        state.contacts,
+        [action.payload],
+        state.auth.privateKey,
+        false
+      );
+      localStorage.setItem(
+        state.auth.userName + CONTACTS_SUFFIX,
+        JSON.stringify(contactsNM)
+      );
+      return { ...state, contacts: [...contactsNM] };
+    case ActionTypes.SEND_NEW_MESSAGE:
+      const contactsSNM = addMessages(
+        state.contacts,
+        [action.payload],
+        null,
+        true
+      );
+      localStorage.setItem(
+        state.auth.userName + CONTACTS_SUFFIX,
+        JSON.stringify(contactsSNM)
+      );
+      return { ...state, contacts: [...contactsSNM] };
     case ActionTypes.LOGOUT:
       sessionStorage.removeItem(SESSION_KEY);
       return { ...state, auth: { ...state.auth, sessionKey: action.payload } };

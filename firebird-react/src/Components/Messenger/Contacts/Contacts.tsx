@@ -58,6 +58,7 @@ const Contacts = (props: any): JSX.Element => {
       const contacts = state.contacts;
       contacts.push(contact);
       dispatch({ type: ActionTypes.UPDATE_CONTACTS, payload: contacts });
+      setSearch("");
     } catch (err) {
       if (err.response) {
         switch (err.response.status) {
@@ -100,7 +101,7 @@ const Contacts = (props: any): JSX.Element => {
     if (contacts.length) {
       const contact = contacts[0];
       if (isUser(contact.user)) {
-        if (contact.user.publicKey === null) {
+        if (!contact.user.publicKey) {
           try {
             const res = await API.get(
               `/api/publicKey?userName=${state.auth.userName}&sessionKey=${state.auth.sessionKey}&user=${user}`
@@ -186,6 +187,7 @@ const Contacts = (props: any): JSX.Element => {
       const contacts = state.contacts;
       contacts.push({ user: newGroup, messages: [] });
       dispatch({ type: ActionTypes.UPDATE_CONTACTS, payload: contacts });
+      setSearch("");
     } catch (err) {
       if (err.response) {
         switch (err.response.status) {
@@ -225,6 +227,7 @@ const Contacts = (props: any): JSX.Element => {
       const contacts = state.contacts;
       contacts.push({ user: newGroup, messages: [] });
       dispatch({ type: ActionTypes.UPDATE_CONTACTS, payload: contacts });
+      setSearch("");
     } catch (err) {
       if (err.response) {
         switch (err.response.status) {

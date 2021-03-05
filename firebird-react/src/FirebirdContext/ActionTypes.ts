@@ -6,6 +6,8 @@ const ActionTypes = {
   UPDATE_CONTACTS: "UPDATE_CONTACTS",
   SET_RECEIVER: "SET_RECEIVER",
   LOGOUT: "LOGOUT",
+  NEW_MESSAGE: "NEW_MESSAGE",
+  SEND_NEW_MESSAGE: "SEND_NEW_MESSAGE",
 };
 
 export default ActionTypes;

@@ -24,8 +24,92 @@ import {
 } from "../../../constants";
 import ActionTypes from "../../../FirebirdContext/ActionTypes";
 import crypto from "crypto";
+import NodeRSA from "node-rsa";
 
 const socket = io(FIREBIRD_SERVER);
+
+const decrypt = (message: Message, privateKey: string | null): Message => {
+  if (message.receiver.startsWith(GROUP_PREFIX)) {
+    return { ...message };
+  }
+  if (!privateKey) {
+    modalNotify("Invalid private key.");
+    return { ...message };
+  }
+  try {
+    const key = new NodeRSA().importKey(privateKey, "private");
+    const res: Message = { ...message };
+    res.body = key.decrypt(res.body, "utf8");
+    return res;
+  } catch (err) {
+    modalNotify("Invalid private key.");
+    return { ...message };
+  }
+};
+
+const encrypt = (message: Message, publicKey: string | null): Message => {
+  if (message.receiver.startsWith(GROUP_PREFIX)) {
+    return { ...message };
+  }
+  if (!publicKey) {
+    modalNotify("Invalid public key from sender.");
+    return { ...message };
+  }
+  try {
+    const key = new NodeRSA().importKey(publicKey, "public");
+    const res: Message = { ...message };
+    res.body = key.encrypt(res.body, "base64");
+    return res;
+  } catch (err) {
+    modalNotify("Invalid public key from sender.");
+    return { ...message };
+  }
+};
+
+// top ten bruh moment functions.
+export const addMessages = (
+  contacts: Contact[],
+  messages: Message[],
+  privateKey: string | null,
+  sent: boolean
+): Contact[] => {
+  const res = [...contacts];
+  messages.forEach((message) => {
+    if (message.receiver && message.receiver.startsWith(GROUP_PREFIX)) {
+      const idx = res.findIndex((contact) => {
+        return (
+          isGroup(contact.user) && contact.user.groupName === message.receiver
+        );
+      });
+      if (idx === -1) {
+        const newGroup: Group = { groupName: message.receiver, members: [] };
+        res.push({ user: newGroup, messages: [{ ...message }] });
+      } else {
+        res[idx].messages.push(message);
+      }
+    } else if (message.receiver && message.receiver === USER_SERVER) {
+    } else {
+      const idx = res.findIndex((contact) => {
+        return (
+          isUser(contact.user) &&
+          contact.user.userName === (sent ? message.receiver : message.sender)
+        );
+      });
+      message = decrypt(message, privateKey);
+      if (idx === -1) {
+        const newUser: User = {
+          userName: sent ? message.receiver : message.sender,
+          publicKey: null,
+          active: false,
+        };
+        res.push({ user: newUser, messages: [{ ...message }] });
+      } else {
+        res[idx].messages.push(message);
+      }
+    }
+  });
+  return res;
+};
 
 const MessengerMain = (): JSX.Element => {
   const { state, dispatch } = useContext(FirebirdContext);
@@ -44,54 +128,38 @@ const MessengerMain = (): JSX.Element => {
       receiver: state.currentReceiver ? state.currentReceiver : "",
       body: data,
     };
+    let publicKey = null;
+    const contact = state.contacts.filter((contact) => {
+      if (
+        isUser(contact.user) &&
+        contact.user.userName === state.currentReceiver
+      ) {
+        return true;
+      }
+      return false;
+    });
+    if (contact.length && isUser(contact[0].user)) {
+      publicKey = contact[0].user.publicKey;
+    }
     socket.emit(
       SEND_MESSAGE,
       JSON.stringify({
         userName: state.auth.userName,
         sessionKey: state.auth.sessionKey,
-        message: message,
+        message: encrypt(message, publicKey),
       })
     );
-  };
-
-  const addMessages = (contacts: Contact[], messages: Message[]): Contact[] => {
-    const res = [...contacts];
-    messages.forEach((message) => {
-      if (message.receiver && message.receiver.startsWith(GROUP_PREFIX)) {
-        const idx = res.findIndex((contact) => {
-          return (
-            isGroup(contact.user) && contact.user.groupName === message.receiver
-          );
-        });
-        if (idx === -1) {
-          const newGroup: Group = { groupName: message.receiver, members: [] };
-          res.push({ user: newGroup, messages: [{ ...message }] });
-        } else {
-          res[idx].messages.push(message);
-        }
-      } else if (message.receiver && message.receiver === USER_SERVER) {
-      } else {
-        const idx = res.findIndex((contact) => {
-          return (
-            isUser(contact.user) && contact.user.userName === message.sender
-          );
-        });
-        if (idx === -1) {
-          const newUser: User = {
-            userName: message.sender,
-            publicKey: null,
-            active: false,
-          };
-          res.push({ user: newUser, messages: [{ ...message }] });
-        } else {
-          res[idx].messages.push(message);
-        }
-      }
+    dispatch({
+      type: ActionTypes.SEND_NEW_MESSAGE,
+      payload: message,
     });
-    return res;
   };
 
   useEffect(() => {
+    if (!socket.connected) {
+      socket.connect();
+    }
+
     socket.emit(
       "new_connection",
       JSON.stringify({
@@ -99,17 +167,23 @@ const MessengerMain = (): JSX.Element => {
         sessionKey: state.auth.sessionKey,
       })
     );
+
     socket.on(RECV_MESSAGE, (data: any) => {
       const message: Message = JSON.parse(data);
-      const newState: Contact[] = addMessages(state.contacts, [message]);
-      dispatch({ type: ActionTypes.UPDATE_CONTACTS, payload: newState });
+      dispatch({ type: ActionTypes.NEW_MESSAGE, payload: message });
     });
+
     socket.on(ACK_MESSAGE, (data: any) => {
       console.log("ack_message: " + data);
     });
+
     socket.on(USER_STATE_CHANGE, (data: any) => {
       console.log("user_state_change: " + data);
     });
+
+    return () => {
+      socket.close();
+    };
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -126,7 +200,12 @@ const MessengerMain = (): JSX.Element => {
             state.auth.userName + CONTACTS_SUFFIX
           );
           const contacts = data ? JSON.parse(data) : [];
-          const updatedContacts = addMessages(contacts, messages);
+          const updatedContacts = addMessages(
+            contacts,
+            messages,
+            state.auth.privateKey,
+            false
+          );
           dispatch({
             type: ActionTypes.UPDATE_CONTACTS,
             payload: updatedContacts,
@@ -147,7 +226,12 @@ const MessengerMain = (): JSX.Element => {
       }
     };
     getPendingMessages();
-  }, [dispatch, state.auth.sessionKey, state.auth.userName]);
+  }, [
+    dispatch,
+    state.auth.sessionKey,
+    state.auth.userName,
+    state.auth.privateKey,
+  ]);
 
   return (
     <div className={styles.MessengerMain}>
