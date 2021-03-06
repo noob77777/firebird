@@ -14,13 +14,13 @@ import styles from "./MessengerMain.module.scss";
 import {
   ACK_MESSAGE,
   CONTACTS_SUFFIX,
-  FIREBIRD_SERVER,
   GROUP_PREFIX,
   MESSAGE_FAILED,
   MESSAGE_PENDING,
   MESSAGE_SENT,
   RECV_MESSAGE,
   SEND_MESSAGE,
+  SOCKET_IP,
   TYPE_IMAGE,
   TYPE_TEXT,
   USER_PREFIX,
@@ -31,7 +31,7 @@ import ActionTypes from "../../../FirebirdContext/ActionTypes";
 import crypto from "crypto";
 import NodeRSA from "node-rsa";
 
-const socket = io(FIREBIRD_SERVER);
+const socket = io(SOCKET_IP);
 
 const decrypt = (message: Message, privateKey: string | null): Message => {
   if (message.receiver.startsWith(GROUP_PREFIX) || message.type !== TYPE_TEXT) {
@@ -120,6 +120,12 @@ const updateScroll = (): void => {
   if (element) {
     element.scrollTop = element.scrollHeight;
   }
+};
+
+const distinct = (messages: Message[]): Message[] => {
+  return [
+    ...new Map(messages.map((item: Message) => [item["id"], item])).values(),
+  ];
 };
 
 const MessengerMain = (): JSX.Element => {
@@ -374,8 +380,8 @@ const MessengerMain = (): JSX.Element => {
       <div className="row">
         {userPresent ? (
           <div id="scrolldiv" className={styles.scroll + " col s12"}>
-            {state.contacts
-              .filter((contact) => {
+            {distinct(
+              state.contacts.filter((contact) => {
                 if (
                   isUser(contact.user) &&
                   contact.user.userName === state.currentReceiver
@@ -389,8 +395,8 @@ const MessengerMain = (): JSX.Element => {
                   return true;
                 }
                 return false;
-              })[0]
-              .messages.map(MessageView)}
+              })[0].messages
+            ).map(MessageView)}
           </div>
         ) : (
           <div
