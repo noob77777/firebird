@@ -1,4 +1,4 @@
-export const FIREBIRD_SERVER: string = "http://localhost:8080";
+export const FIREBIRD_SERVER: string = "http://192.168.0.7:8080";
 
 export const USER_PREFIX: string = "user.";
 export const GROUP_PREFIX: string = "group.";
@@ -21,4 +21,6 @@ export const TYPE_IMAGE: string = "image";
 
 export const MESSAGE_PENDING: string = "message_pending";
 export const MESSAGE_SENT: string = "message_sent";
-export const MESSAGE_ACKED: string = "message_acked";
+export const MESSAGE_FAILED: string = "message_failed";
+
+export const FORM_IMAGE_KEY: string = "form_image_key";

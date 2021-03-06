@@ -1,6 +1,12 @@
 @import "../../../common.module.scss";
 
 .MessengerMain {
+  .image {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+  }
+
   /* label color */
   :global(.input-field label) {
     color: $dark-red;
@@ -88,8 +94,16 @@
       background-color: $dark-red;
       color: $white;
     }
+    .reimage {
+      color: black;
+      background-color: transparent;
+    }
     .sender {
       background-color: $grey;
     }
+  }
+
+  :global(#materialbox-overlay) {
+    background-color: rgba(0, 0, 0, 0.8);
   }
 }

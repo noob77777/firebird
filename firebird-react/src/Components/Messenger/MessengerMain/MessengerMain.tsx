@@ -16,8 +16,12 @@ import {
   CONTACTS_SUFFIX,
   FIREBIRD_SERVER,
   GROUP_PREFIX,
+  MESSAGE_FAILED,
+  MESSAGE_PENDING,
+  MESSAGE_SENT,
   RECV_MESSAGE,
   SEND_MESSAGE,
+  TYPE_IMAGE,
   TYPE_TEXT,
   USER_PREFIX,
   USER_SERVER,
@@ -30,7 +34,7 @@ import NodeRSA from "node-rsa";
 const socket = io(FIREBIRD_SERVER);
 
 const decrypt = (message: Message, privateKey: string | null): Message => {
-  if (message.receiver.startsWith(GROUP_PREFIX)) {
+  if (message.receiver.startsWith(GROUP_PREFIX) || message.type !== TYPE_TEXT) {
     return { ...message };
   }
   if (!privateKey) {
@@ -48,7 +52,7 @@ const decrypt = (message: Message, privateKey: string | null): Message => {
 };
 
 const encrypt = (message: Message, publicKey: string | null): Message => {
-  if (message.receiver.startsWith(GROUP_PREFIX)) {
+  if (message.receiver.startsWith(GROUP_PREFIX) || message.type !== TYPE_TEXT) {
     return { ...message };
   }
   if (!publicKey) {
@@ -89,13 +93,13 @@ export const addMessages = (
       }
     } else if (message.receiver && message.receiver === USER_SERVER) {
     } else {
+      message = decrypt(message, privateKey);
       const idx = res.findIndex((contact) => {
         return (
           isUser(contact.user) &&
           contact.user.userName === (sent ? message.receiver : message.sender)
         );
       });
-      message = decrypt(message, privateKey);
       if (idx === -1) {
         const newUser: User = {
           userName: sent ? message.receiver : message.sender,
@@ -112,7 +116,7 @@ export const addMessages = (
 };
 
 const updateScroll = (): void => {
-  let element = document.getElementById("scrolldiv");
+  const element = document.getElementById("scrolldiv");
   if (element) {
     element.scrollTop = element.scrollHeight;
   }
@@ -121,6 +125,7 @@ const updateScroll = (): void => {
 const MessengerMain = (): JSX.Element => {
   const { state, dispatch } = useContext(FirebirdContext);
   const [text, setText] = useState("");
+  const [file, setFile] = useState<string | null>(null);
 
   useEffect(() => {
     updateScroll();
@@ -144,7 +149,8 @@ const MessengerMain = (): JSX.Element => {
       return false;
     }).length !== 0;
 
-  const sendMessage = (data: string, type: string): void => {
+  const sendMessage = (data: string | FormData, type: string): void => {
+    console.log(data);
     const timestamp = Date.now();
     const message: Message = {
       timestamp: Date.now(),
@@ -156,6 +162,7 @@ const MessengerMain = (): JSX.Element => {
       sender: state.auth.userName ? state.auth.userName : "",
       receiver: state.currentReceiver ? state.currentReceiver : "",
       body: data,
+      status: MESSAGE_PENDING,
     };
     let publicKey = null;
     const contact = state.contacts.filter((contact) => {
@@ -175,7 +182,7 @@ const MessengerMain = (): JSX.Element => {
       JSON.stringify({
         userName: state.auth.userName,
         sessionKey: state.auth.sessionKey,
-        message: encrypt(message, publicKey),
+        message: { ...encrypt(message, publicKey), status: undefined },
       })
     );
     dispatch({
@@ -204,7 +211,8 @@ const MessengerMain = (): JSX.Element => {
     });
 
     socket.on(ACK_MESSAGE, (data: any) => {
-      console.log("ack_message: " + data);
+      const message: Message = JSON.parse(data);
+      dispatch({ type: ActionTypes.SET_ACK_FLAG, payload: message });
     });
 
     socket.on(USER_STATE_CHANGE, (data: any) => {
@@ -266,31 +274,86 @@ const MessengerMain = (): JSX.Element => {
     state.auth.privateKey,
   ]);
 
-  const MessageView = (message: Message): JSX.Element => {
+  const reader = new FileReader();
+  reader.addEventListener("load", () => {
+    if (reader.result) {
+      setFile(reader.result.toString());
+    }
+  });
+
+  useEffect(() => {
+    if (file) {
+      sendMessage(file, TYPE_IMAGE);
+      setFile(null);
+    }
+
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [file]);
+
+  const MessageView = (message: Message, key: number): JSX.Element => {
+    const MessageViewInner = (): JSX.Element => {
+      var icon: JSX.Element = <></>;
+      switch (message.status) {
+        case MESSAGE_PENDING:
+          icon = <i className="material-icons">access_time</i>;
+          break;
+        case MESSAGE_FAILED:
+          icon = <i className="material-icons">error</i>;
+          break;
+        case MESSAGE_SENT:
+          icon = <i className="material-icons">check_circle</i>;
+          break;
+      }
+      var body: JSX.Element = <></>;
+      if (message.type === TYPE_TEXT && typeof message.body === "string") {
+        body = <>{message.body}</>;
+      } else if (
+        message.type === TYPE_IMAGE &&
+        typeof message.body === "string"
+      ) {
+        body = (
+          <>
+            <img
+              className={styles.image + " materialboxed"}
+              src={message.body}
+              alt="<>img data not loaded</>"
+            />
+          </>
+        );
+      }
+
+      return (
+        <>
+          <p>
+            <i className="material-icons">account_circle</i>
+            <small>{message.sender.replace(USER_PREFIX, "")}</small>
+          </p>
+          <p>{body}</p>
+          <p>
+            <small>{new Date(message.timestamp).toISOString()}</small>
+            <small className="right">{icon}</small>
+          </p>
+        </>
+      );
+    };
+
     return (
-      <div className={styles.MessageView}>
+      <div key={key} className={styles.MessageView}>
         <div className="row">
           {message.sender !== state.auth.userName ? (
-            <div className={styles.receiver + " col l5 s8"}>
-              <p>
-                <i className="material-icons">account_circle</i>
-                <small>{message.sender.replace(USER_PREFIX, "")}</small>
-              </p>
-              <p>{message.body}</p>
-              <p>
-                <small>{new Date(message.timestamp).toISOString()}</small>
-              </p>
+            <div
+              className={
+                styles.receiver +
+                " " +
+                (message.type === TYPE_IMAGE ? styles.reimage : "") +
+                " col l5 s8"
+              }
+            >
+              <MessageViewInner />
             </div>
           ) : (
             <div className={styles.sender + " col l5 s8 offset-l7  offset-s4"}>
-              <p>
-                <i className="material-icons">account_circle</i>
-                <small>{message.sender.replace(USER_PREFIX, "")}</small>
-              </p>
-              <p>{message.body}</p>
-              <p>
-                <small>{new Date(message.timestamp).toISOString()}</small>
-              </p>
+              <MessageViewInner />
             </div>
           )}
         </div>
@@ -369,7 +432,27 @@ const MessengerMain = (): JSX.Element => {
                 </button>
               </div>
               <div className="col l1 s2 center">
-                <button className="btn">
+                <input
+                  id="imgupload"
+                  type="file"
+                  hidden
+                  onChange={(e) => {
+                    if (e.target.files && e.target.files.length) {
+                      reader.readAsDataURL(e.target.files[0]);
+                    } else {
+                      setFile(null);
+                    }
+                  }}
+                />
+                <button
+                  className="btn"
+                  onClick={() => {
+                    const btn = document.getElementById("imgupload");
+                    if (btn) {
+                      btn.click();
+                    }
+                  }}
+                >
                   <i className="material-icons">add_a_photo</i>
                 </button>
               </div>

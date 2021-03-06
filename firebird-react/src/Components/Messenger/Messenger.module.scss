@@ -6,12 +6,12 @@
   overflow-y: hidden;
   overflow-x: hidden;
   background-color: $md-blue;
-  @media only screen and (max-width: 600px) {
+  @media only screen and (max-width: 992px) {
     padding-top: 0;
   }
   padding-top: 5vh;
   .messengerContainer {
-    @media only screen and (max-width: 600px) {
+    @media only screen and (max-width: 992px) {
       height: 100vh;
       width: 100vw;
       margin: 0;

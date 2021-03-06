@@ -2,6 +2,8 @@ import { createContext, Dispatch, useReducer } from "react";
 import { addMessages } from "../Components/Messenger/MessengerMain/MessengerMain";
 import {
   CONTACTS_SUFFIX,
+  MESSAGE_FAILED,
+  MESSAGE_SENT,
   PRIVATE_KEY_SUFFIX,
   PUBLIC_KEY_SUFFIX,
   SESSION_KEY,
@@ -194,6 +196,27 @@ export const FirebirdContextReducer = (
         JSON.stringify(contactsSNM)
       );
       return { ...state, contacts: [...contactsSNM] };
+    case ActionTypes.SET_ACK_FLAG:
+      const contactsSAF = state.contacts.map((contact: Contact) => {
+        return {
+          ...contact,
+          messages: contact.messages.map((message: Message) => {
+            if (message.id === action.payload.id) {
+              return {
+                ...message,
+                status: action.payload.body ? MESSAGE_SENT : MESSAGE_FAILED,
+              };
+            } else {
+              return message;
+            }
+          }),
+        };
+      });
+      localStorage.setItem(
+        state.auth.userName + CONTACTS_SUFFIX,
+        JSON.stringify(contactsSAF)
+      );
+      return { ...state, contacts: [...contactsSAF] };
     case ActionTypes.LOGOUT:
       sessionStorage.removeItem(SESSION_KEY);
       return { ...state, auth: { ...state.auth, sessionKey: action.payload } };

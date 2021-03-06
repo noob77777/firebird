@@ -1,3 +1,9 @@
+html,
+body {
+  max-width: 100% !important;
+  overflow: hidden !important;
+}
+
 body {
   margin: 0;
   font-family: "Roboto", sans-serif;

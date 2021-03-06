@@ -8,6 +8,7 @@ const ActionTypes = {
   LOGOUT: "LOGOUT",
   NEW_MESSAGE: "NEW_MESSAGE",
   SEND_NEW_MESSAGE: "SEND_NEW_MESSAGE",
+  SET_ACK_FLAG: "SET_ACK_FLAG",
 };
 
 export default ActionTypes;
