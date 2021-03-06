@@ -1,4 +1,5 @@
 import express from "express";
+import cors from "cors";
 import { log, app, serverHTTP, serverHTTPS, io, isMessage } from "./global";
 import {
   GROUP_PREFIX,
@@ -12,6 +13,7 @@ import auth from "./auth/auth";
 import messenger from "./messenger/messenger";
 import GarbageCollector from "./GarbageCollector/GarbageCollector";
 
+app.use(cors());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 

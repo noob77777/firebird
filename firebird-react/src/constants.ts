@@ -1,4 +1,4 @@
-export const FIREBIRD_SERVER: string = "http://192.168.0.7:8080";
+export const FIREBIRD_SERVER: string = "http://localhost:8080";
 
 export const USER_PREFIX: string = "user.";
 export const GROUP_PREFIX: string = "group.";

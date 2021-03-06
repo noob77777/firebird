@@ -150,7 +150,6 @@ const MessengerMain = (): JSX.Element => {
     }).length !== 0;
 
   const sendMessage = (data: string | FormData, type: string): void => {
-    console.log(data);
     const timestamp = Date.now();
     const message: Message = {
       timestamp: Date.now(),
