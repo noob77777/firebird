@@ -9,7 +9,7 @@ import FirebirdContext, {
   User,
 } from "../../../FirebirdContext/FirebirdContext";
 import API from "../../../API/API";
-import { modalNotify } from "../../Modal/Modal";
+import { modalNotify } from "../../Notifier/Notifier";
 import styles from "./MessengerMain.module.scss";
 import {
   ACK_MESSAGE,
@@ -19,6 +19,7 @@ import {
   RECV_MESSAGE,
   SEND_MESSAGE,
   TYPE_TEXT,
+  USER_PREFIX,
   USER_SERVER,
   USER_STATE_CHANGE,
 } from "../../../constants";
@@ -33,7 +34,6 @@ const decrypt = (message: Message, privateKey: string | null): Message => {
     return { ...message };
   }
   if (!privateKey) {
-    modalNotify("Invalid private key.");
     return { ...message };
   }
   try {
@@ -111,9 +111,38 @@ export const addMessages = (
   return res;
 };
 
+const updateScroll = (): void => {
+  let element = document.getElementById("scrolldiv");
+  if (element) {
+    element.scrollTop = element.scrollHeight;
+  }
+};
+
 const MessengerMain = (): JSX.Element => {
   const { state, dispatch } = useContext(FirebirdContext);
   const [text, setText] = useState("");
+
+  useEffect(() => {
+    updateScroll();
+  }, [state.contacts]);
+
+  const userPresent =
+    state.currentReceiver &&
+    state.contacts.filter((contact) => {
+      if (
+        isUser(contact.user) &&
+        contact.user.userName === state.currentReceiver
+      ) {
+        return true;
+      }
+      if (
+        isGroup(contact.user) &&
+        contact.user.groupName === state.currentReceiver
+      ) {
+        return true;
+      }
+      return false;
+    }).length !== 0;
 
   const sendMessage = (data: string, type: string): void => {
     const timestamp = Date.now();
@@ -153,6 +182,7 @@ const MessengerMain = (): JSX.Element => {
       type: ActionTypes.SEND_NEW_MESSAGE,
       payload: message,
     });
+    setText("");
   };
 
   useEffect(() => {
@@ -212,11 +242,14 @@ const MessengerMain = (): JSX.Element => {
           });
         } catch (err) {
           if (err.response) {
-            switch (err.response) {
+            switch (err.response.status) {
               case 401:
                 modalNotify(
                   "Session key may have expired, please login again."
                 );
+                break;
+              default:
+                modalNotify("Something went wrong. Try again.");
                 break;
             }
           } else {
@@ -233,13 +266,54 @@ const MessengerMain = (): JSX.Element => {
     state.auth.privateKey,
   ]);
 
+  const MessageView = (message: Message): JSX.Element => {
+    return (
+      <div className={styles.MessageView}>
+        <div className="row">
+          {message.sender !== state.auth.userName ? (
+            <div className={styles.receiver + " col l5 s8"}>
+              <p>
+                <i className="material-icons">account_circle</i>
+                <small>{message.sender.replace(USER_PREFIX, "")}</small>
+              </p>
+              <p>{message.body}</p>
+              <p>
+                <small>{new Date(message.timestamp).toISOString()}</small>
+              </p>
+            </div>
+          ) : (
+            <div className={styles.sender + " col l5 s8 offset-l7  offset-s4"}>
+              <p>
+                <i className="material-icons">account_circle</i>
+                <small>{message.sender.replace(USER_PREFIX, "")}</small>
+              </p>
+              <p>{message.body}</p>
+              <p>
+                <small>{new Date(message.timestamp).toISOString()}</small>
+              </p>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div className={styles.MessengerMain}>
-      <div>{state.currentReceiver};</div>
-      <div>
-        {state.currentReceiver
-          ? JSON.stringify(
-              state.contacts.filter((contact) => {
+      {userPresent ? (
+        <div className={styles.header + " row"}>
+          <div className="col s12">
+            <h5>{state.currentReceiver}</h5>
+          </div>
+        </div>
+      ) : (
+        ""
+      )}
+      <div className="row">
+        {userPresent ? (
+          <div id="scrolldiv" className={styles.scroll + " col s12"}>
+            {state.contacts
+              .filter((contact) => {
                 if (
                   isUser(contact.user) &&
                   contact.user.userName === state.currentReceiver
@@ -253,28 +327,58 @@ const MessengerMain = (): JSX.Element => {
                   return true;
                 }
                 return false;
-              })[0].messages
-            )
-          : null}
+              })[0]
+              .messages.map(MessageView)}
+          </div>
+        ) : (
+          <div
+            className={styles.empty + " col s12 valign-wrapper center-align"}
+          >
+            <div className={styles.ncscenter}>
+              <h6>No contact selected.</h6>
+            </div>
+          </div>
+        )}
       </div>
-      <div>
-        <input
-          type="text"
-          value={text}
-          onChange={(e) => {
-            setText(e.target.value);
-          }}
-        />
-        <button
-          onClick={() => {
-            if (state.currentReceiver) {
-              sendMessage(text, TYPE_TEXT);
-            }
-          }}
-        >
-          Send
-        </button>
-      </div>
+      {userPresent ? (
+        <div className={styles.input + " row"}>
+          <div className="col s12">
+            <div className="row">
+              <div className="col s8 l10 input-field">
+                <input
+                  id="main-text-send"
+                  type="text"
+                  className="validate"
+                  value={text}
+                  onChange={(e) => {
+                    setText(e.target.value);
+                  }}
+                />
+                <label htmlFor="main-text-send">Type a message</label>
+              </div>
+              <div className="col l1 s2 center">
+                <button
+                  className="btn"
+                  onClick={() => {
+                    if (state.currentReceiver) {
+                      sendMessage(text, TYPE_TEXT);
+                    }
+                  }}
+                >
+                  <i className="material-icons">send</i>
+                </button>
+              </div>
+              <div className="col l1 s2 center">
+                <button className="btn">
+                  <i className="material-icons">add_a_photo</i>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      ) : (
+        ""
+      )}
     </div>
   );
 };

@@ -8,7 +8,7 @@ import FirebirdContext, {
   isGroup,
   isUser,
 } from "../../../FirebirdContext/FirebirdContext";
-import { modalNotify } from "../../Modal/Modal";
+import { modalNotify } from "../../Notifier/Notifier";
 import styles from "./Contacts.module.scss";
 
 const Contacts = (props: any): JSX.Element => {
@@ -83,7 +83,10 @@ const Contacts = (props: any): JSX.Element => {
       }
       return true;
     });
-    dispatch({ type: ActionTypes.UPDATE_CONTACTS, payload: contacts });
+    dispatch({
+      type: ActionTypes.UPDATE_CONTACTS,
+      payload: contacts,
+    });
   };
 
   const setCurrentReceiver = async (user: string) => {
@@ -265,8 +268,8 @@ const Contacts = (props: any): JSX.Element => {
               {isUser(contact.user) ? "account_circle" : "group"}
             </i>
             {isUser(contact.user)
-              ? contact.user.userName
-              : contact.user.groupName}
+              ? contact.user.userName.replace(USER_PREFIX, "")
+              : contact.user.groupName.replace(GROUP_PREFIX, "")}
             <a
               className="right"
               href="#react"
@@ -302,7 +305,7 @@ const Contacts = (props: any): JSX.Element => {
                 }}
                 value={search}
               />
-              <label htmlFor={props.name}>Search</label>
+              <label htmlFor={props.name}>Search or add new contacts</label>
             </div>
           </div>
           <div className={styles.borderbtm + " row"}>

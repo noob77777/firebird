@@ -1,0 +1,11 @@
+@import "../../common.module.scss";
+
+.Notifier {
+  width: 50vw;
+  height: 30vh;
+  @media only screen and (max-width: 600px) {
+    padding-top: 0;
+    width: 80vw;
+    height: 20vh;
+  }
+}

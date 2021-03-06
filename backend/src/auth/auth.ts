@@ -13,6 +13,7 @@ class SessionStore {
   };
   public removeSession = (userName: string): void => {
     delete this.sessions[userName];
+    log.warn(`Session auto timeout for ${userName}`);
   };
 }
 

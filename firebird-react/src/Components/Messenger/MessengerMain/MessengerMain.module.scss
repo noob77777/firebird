@@ -1,5 +1,95 @@
 @import "../../../common.module.scss";
 
 .MessengerMain {
-  height: 90vh;
+  /* label color */
+  :global(.input-field label) {
+    color: $dark-red;
+  }
+
+  :global(.input-field input[type="text"]) {
+    color: $dark-red;
+    border-bottom: 1px solid $dark-red;
+    box-shadow: 0 1px 0 0 $dark-red;
+  }
+  :global(.input-field) {
+    color: $dark-red;
+  }
+  /* label focus color */
+  :global(.input-field input[type="text"]:focus + label) {
+    color: $dark-red;
+  }
+  /* label underline focus color */
+  :global(.input-field input[type="text"]:focus) {
+    border-bottom: 1px solid $dark-red;
+    box-shadow: 0 1px 0 0 $dark-red;
+  }
+  /* valid color */
+  :global(.input-field input[type="text"].valid) {
+    border-bottom: 1px solid $dark-red;
+    box-shadow: 0 1px 0 0 $dark-red;
+  }
+  /* invalid color */
+  :global(.input-field input[type="text"].invalid) {
+    border-bottom: 1px solid $dark-red;
+    box-shadow: 0 1px 0 0 $dark-red;
+  }
+  /* icon prefix focus color */
+  :global(.input-field .prefix.active) {
+    color: $dark-red;
+  }
+
+  .input {
+    border-top: 2px $dark-red solid;
+    padding-top: 10px;
+    overflow: hidden;
+    background-color: $m2-blue;
+  }
+  :global(.btn) {
+    margin-top: 10px;
+    background-color: $dark-red !important;
+  }
+  :global(.btn:hover) {
+    background-color: $darker-red !important;
+  }
+
+  max-height: 90vh;
+  .scroll {
+    overflow-y: scroll;
+    overflow-x: hidden;
+    @media only screen and (max-width: 600px) {
+      min-height: 72vh;
+      height: 72vh;
+    }
+    height: 70vh;
+    max-height: 70vh;
+  }
+
+  .header {
+    background-color: $m2-blue;
+    color: $dark-red;
+    border-bottom: 2px $dark-red solid;
+  }
+
+  .empty {
+    height: 80vh;
+    color: $dark-red;
+    @media only screen and (max-width: 600px) {
+      max-height: 82vh;
+    }
+    .ncscenter {
+      width: 100%;
+      text-align: center;
+    }
+  }
+
+  .MessageView {
+    padding: 5px;
+    .receiver {
+      background-color: $dark-red;
+      color: $white;
+    }
+    .sender {
+      background-color: $grey;
+    }
+  }
 }

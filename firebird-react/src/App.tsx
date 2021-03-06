@@ -3,9 +3,9 @@ import { useContext, useEffect } from "react";
 import Login from "./Components/Login/Login";
 import Messenger from "./Components/Messenger/Messenger";
 import M from "materialize-css";
-import Modal from "./Components/Modal/Modal";
 import { SESSION_KEY } from "./constants";
 import ActionTypes from "./FirebirdContext/ActionTypes";
+import Notifier from "./Components/Notifier/Notifier";
 
 const App = (): JSX.Element => {
   const { state, dispatch } = useContext(FirebirdContext);
@@ -25,7 +25,7 @@ const App = (): JSX.Element => {
   return (
     <>
       {state.auth.sessionKey ? <Messenger /> : <Login />}
-      <Modal />
+      <Notifier />
     </>
   );
 };
