@@ -291,79 +291,90 @@ const Contacts = (props: any): JSX.Element => {
 
   return (
     <div className={styles.Contacts + " row"}>
-        <div className="col s12">
-          <div className={styles.r1 + " row"}>
-            <div className="col s12 m10 offset-m1 input-field">
-              <i className="material-icons prefix">search</i>
-              <input
-                id={props.name}
-                type="text"
-                className="validate"
-                onChange={(e) => {
-                  setSearch(e.target.value);
-                }}
-                value={search}
-              />
-              <label htmlFor={props.name}>Search or add new contacts</label>
-            </div>
+      <div className="col s12">
+        <div className={styles.r1 + " row"}>
+          <div className="col s12 m10 offset-m1 input-field">
+            <i className="material-icons prefix">search</i>
+            <input
+              id={props.name}
+              type="text"
+              className="validate"
+              onChange={(e) => {
+                setSearch(e.target.value);
+              }}
+              value={search}
+            />
+            <label htmlFor={props.name}>Search or add new contacts</label>
           </div>
-          <div className={styles.r2 + " row"}>
-            <div className="col s12 m10 offset-m1">
-              <div className="row">
-                <div className="col s4 center">
-                  <button
-                    type="button"
-                    className={styles.btn + " btn btn-small"}
-                    onClick={() => {
-                      addContact(search);
-                    }}
-                  >
-                    Add Contact
-                  </button>
-                </div>
-                <div className="col s4 center">
-                  <button
-                    type="button"
-                    className={styles.btn + " btn btn-small"}
-                    onClick={() => createGroup(search)}
-                  >
-                    Create Group
-                  </button>
-                </div>
-                <div className="col s4 center">
-                  <button
-                    type="button"
-                    className={styles.btn + " btn btn-small"}
-                    onClick={() => joinGroup(search)}
-                  >
-                    Join Group
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-          <ul className={styles.list}>
-            {filteredContacts.length ? (
-              filteredContacts.map((contact, index) =>
-                ContactView(
-                  contact,
-                  index,
-                  state.currentReceiver ===
-                    (isUser(contact.user)
-                      ? contact.user.userName
-                      : contact.user.groupName)
-                )
-              )
-            ) : (
-              <div className={styles.vh60 + " valign-wrapper center-align"}>
-                <div className={styles.ncpfcenter}>
-                  <h6>No contacts for applied filter</h6>
-                </div>
-              </div>
-            )}
-          </ul>
         </div>
+        <div className={styles.r2 + " row"}>
+          <div className="col s12 m10 offset-m1">
+            <div className="row">
+              <div className={styles.welcome + " col s8 m9"}>
+                <h6>
+                  Welcome, {state.auth.userName?.replace(USER_PREFIX, "")}
+                </h6>
+              </div>
+              <div className="col s1 center">
+                <button
+                  type="button"
+                  data-position="bottom"
+                  data-tooltip="Add contact"
+                  className={styles.btn + " btn btn-small tooltipped"}
+                  onClick={() => {
+                    addContact(search);
+                  }}
+                >
+                  <i className="material-icons">person_add</i>
+                </button>
+              </div>
+              <div className="col s1 center">
+                <button
+                  type="button"
+                  data-position="top"
+                  data-tooltip="Create group"
+                  className={styles.btn + " btn btn-small tooltipped"}
+                  onClick={() => createGroup(search)}
+                >
+                  <i className="material-icons">group_add</i>
+                </button>
+              </div>
+              <div className="col s1 center">
+                <button
+                  type="button"
+                  data-position="bottom"
+                  data-tooltip="Join group"
+                  className={styles.btn + " btn btn-small tooltipped"}
+                  onClick={() => joinGroup(search)}
+                >
+                  <i className="material-icons">groups</i>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <ul className={styles.list}>
+          {filteredContacts.length ? (
+            filteredContacts.map((contact, index) =>
+              ContactView(
+                contact,
+                index,
+                state.currentReceiver ===
+                  (isUser(contact.user)
+                    ? contact.user.userName
+                    : contact.user.groupName)
+              )
+            )
+          ) : (
+            <div className={styles.vh60 + " valign-wrapper center-align"}>
+              <div className={styles.ncpfcenter}>
+                <h6>No contacts for applied filter</h6>
+              </div>
+            </div>
+          )}
+        </ul>
       </div>
+    </div>
   );
 };
 

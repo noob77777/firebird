@@ -3,7 +3,7 @@
 .Contacts {
   height: 75vh;
 
-  @media screen and (max-width: 992px){
+  @media screen and (max-width: 992px) {
     height: 85vh;
   }
 
@@ -72,8 +72,11 @@
 
   .r2 {
     margin-top: 0;
-    // border: solid red 2px; 
+    // border: solid red 2px;
     height: 10vh;
+    .welcome {
+      color: $dark-red;
+    }
   }
 
   .list {
@@ -95,9 +98,6 @@
       }
     }
   }
-
-
-
 
   .ContactView {
     :global(.btn) {
