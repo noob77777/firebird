@@ -1,22 +1,22 @@
 {
   "files": {
-    "main.css": "/firebird/static/css/main.1f1c8a3a.chunk.css",
-    "main.js": "/firebird/static/js/main.52179a72.chunk.js",
-    "main.js.map": "/firebird/static/js/main.52179a72.chunk.js.map",
+    "main.css": "/firebird/static/css/main.163be8ae.chunk.css",
+    "main.js": "/firebird/static/js/main.c11461e8.chunk.js",
+    "main.js.map": "/firebird/static/js/main.c11461e8.chunk.js.map",
     "runtime-main.js": "/firebird/static/js/runtime-main.d2f6e5ec.js",
     "runtime-main.js.map": "/firebird/static/js/runtime-main.d2f6e5ec.js.map",
-    "static/js/2.f3aa24c5.chunk.js": "/firebird/static/js/2.f3aa24c5.chunk.js",
-    "static/js/2.f3aa24c5.chunk.js.map": "/firebird/static/js/2.f3aa24c5.chunk.js.map",
+    "static/js/2.3970ca01.chunk.js": "/firebird/static/js/2.3970ca01.chunk.js",
+    "static/js/2.3970ca01.chunk.js.map": "/firebird/static/js/2.3970ca01.chunk.js.map",
     "static/js/3.5885b0f6.chunk.js": "/firebird/static/js/3.5885b0f6.chunk.js",
     "static/js/3.5885b0f6.chunk.js.map": "/firebird/static/js/3.5885b0f6.chunk.js.map",
     "index.html": "/firebird/index.html",
-    "static/css/main.1f1c8a3a.chunk.css.map": "/firebird/static/css/main.1f1c8a3a.chunk.css.map",
-    "static/js/2.f3aa24c5.chunk.js.LICENSE.txt": "/firebird/static/js/2.f3aa24c5.chunk.js.LICENSE.txt"
+    "static/css/main.163be8ae.chunk.css.map": "/firebird/static/css/main.163be8ae.chunk.css.map",
+    "static/js/2.3970ca01.chunk.js.LICENSE.txt": "/firebird/static/js/2.3970ca01.chunk.js.LICENSE.txt"
   },
   "entrypoints": [
     "static/js/runtime-main.d2f6e5ec.js",
-    "static/js/2.f3aa24c5.chunk.js",
-    "static/css/main.1f1c8a3a.chunk.css",
-    "static/js/main.52179a72.chunk.js"
+    "static/js/2.3970ca01.chunk.js",
+    "static/css/main.163be8ae.chunk.css",
+    "static/js/main.c11461e8.chunk.js"
   ]
 }
