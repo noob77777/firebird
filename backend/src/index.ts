@@ -210,8 +210,12 @@ app.get("/api/userActive", (req, res) => {
   }
 });
 
-io.attach(serverHTTP);
-io.attach(serverHTTPS);
+const corsSocketOptions = {
+  origin: "*",
+  methods: ["GET", "POST", "OPTIONS"],
+};
+io.attach(serverHTTP, { cors: corsSocketOptions });
+io.attach(serverHTTPS, { cors: corsSocketOptions });
 
 io.on("connection", (client) => {
   client.on(NEW_CONNECTION, (data: any) => {
