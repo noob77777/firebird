@@ -11,6 +11,30 @@ import FirebirdContext, {
 import { modalNotify } from "../../Notifier/Notifier";
 import styles from "./Contacts.module.scss";
 
+const sortOrder = (filteredContacts: Contact[]): Contact[] => {
+  const sorted = [...filteredContacts];
+  sorted.sort((a: Contact, b: Contact): number => {
+    if (a.messages.length === 0 && a.messages.length === 0) {
+      return 0;
+    }
+    if (a.messages.length === 0) {
+      return 1;
+    }
+    if (b.messages.length === 0) {
+      return -1;
+    }
+    const key1 = a.messages[a.messages.length - 1].timestamp;
+    const key2 = b.messages[b.messages.length - 1].timestamp;
+    if (key1 < key2) {
+      return 1;
+    } else if (key1 > key2) {
+      return -1;
+    }
+    return 0;
+  });
+  return sorted;
+};
+
 const Contacts = (props: any): JSX.Element => {
   const { state, dispatch } = useContext(FirebirdContext);
   const [search, setSearch] = useState("");
@@ -54,6 +78,7 @@ const Contacts = (props: any): JSX.Element => {
           active: false,
         },
         messages: [],
+        unread: false,
       };
       const contacts = state.contacts;
       contacts.push(contact);
@@ -188,7 +213,7 @@ const Contacts = (props: any): JSX.Element => {
         newGroup.members.push(state.auth.userName);
       }
       const contacts = state.contacts;
-      contacts.push({ user: newGroup, messages: [] });
+      contacts.push({ user: newGroup, messages: [], unread: false });
       dispatch({ type: ActionTypes.UPDATE_CONTACTS, payload: contacts });
       setSearch("");
     } catch (err) {
@@ -228,7 +253,7 @@ const Contacts = (props: any): JSX.Element => {
         members: resMembers.data.groupMembers,
       };
       const contacts = state.contacts;
-      contacts.push({ user: newGroup, messages: [] });
+      contacts.push({ user: newGroup, messages: [], unread: false });
       dispatch({ type: ActionTypes.UPDATE_CONTACTS, payload: contacts });
       setSearch("");
     } catch (err) {
@@ -270,6 +295,11 @@ const Contacts = (props: any): JSX.Element => {
             {isUser(contact.user)
               ? contact.user.userName.replace(USER_PREFIX, "")
               : contact.user.groupName.replace(GROUP_PREFIX, "")}
+            {contact.unread ? (
+              <i className={styles.fiberNewMargin + " material-icons"}>
+                fiber_new
+              </i>
+            ) : null}
             <a
               className="right"
               href="#react"
@@ -355,7 +385,7 @@ const Contacts = (props: any): JSX.Element => {
         </div>
         <ul className={styles.list}>
           {filteredContacts.length ? (
-            filteredContacts.map((contact, index) =>
+            sortOrder(filteredContacts).map((contact, index) =>
               ContactView(
                 contact,
                 index,

@@ -87,9 +87,10 @@ export const addMessages = (
       });
       if (idx === -1) {
         const newGroup: Group = { groupName: message.receiver, members: [] };
-        res.push({ user: newGroup, messages: [{ ...message }] });
+        res.push({ user: newGroup, messages: [{ ...message }], unread: !sent });
       } else {
         res[idx].messages.push(message);
+        res[idx].unread = !sent;
       }
     } else if (message.receiver && message.receiver === USER_SERVER) {
     } else {
@@ -106,9 +107,10 @@ export const addMessages = (
           publicKey: null,
           active: false,
         };
-        res.push({ user: newUser, messages: [{ ...message }] });
+        res.push({ user: newUser, messages: [{ ...message }], unread: !sent });
       } else {
         res[idx].messages.push(message);
+        res[idx].unread = !sent;
       }
     }
   });
@@ -155,7 +157,30 @@ const MessengerMain = (): JSX.Element => {
       return false;
     }).length !== 0;
 
-  const sendMessage = (data: string | FormData, type: string): void => {
+  const user =
+    userPresent &&
+    state.contacts.filter((contact) => {
+      if (
+        isUser(contact.user) &&
+        contact.user.userName === state.currentReceiver
+      ) {
+        return true;
+      }
+      if (
+        isGroup(contact.user) &&
+        contact.user.groupName === state.currentReceiver
+      ) {
+        return true;
+      }
+      return false;
+    })[0].user;
+  const userActive = isUser(user) && user.active;
+
+  const sendMessage = (data: string, type: string): void => {
+    if (data.length === 0) {
+      return;
+    }
+
     const timestamp = Date.now();
     const message: Message = {
       timestamp: Date.now(),
@@ -375,6 +400,17 @@ const MessengerMain = (): JSX.Element => {
               {state.currentReceiver?.startsWith(USER_PREFIX)
                 ? state.currentReceiver.replace(USER_PREFIX, "")
                 : state.currentReceiver?.replace(GROUP_PREFIX, "")}
+              {isUser(user) ? (
+                <i
+                  className={
+                    styles.activeIconMargin + " material-icons tooltipped"
+                  }
+                  data-position="bottom"
+                  data-tooltip={userActive ? "Active Now" : "Offline"}
+                >
+                  {userActive ? "notifications_active" : "notifications_paused"}
+                </i>
+              ) : null}
             </h5>
           </div>
         </div>
@@ -428,6 +464,13 @@ const MessengerMain = (): JSX.Element => {
                   value={text}
                   onChange={(e) => {
                     setText(e.target.value);
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      if (state.currentReceiver) {
+                        sendMessage(text, TYPE_TEXT);
+                      }
+                    }
                   }}
                 />
                 <label htmlFor="main-text-send">Type a message</label>

@@ -78,6 +78,9 @@
     background-color: $m2-blue;
     color: $dark-red;
     border-bottom: 2px $dark-red solid;
+    .activeIconMargin {
+      margin-left: 2px;
+    }
     // flex: 1;
   }
 

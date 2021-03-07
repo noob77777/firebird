@@ -17,7 +17,7 @@ export interface User {
 }
 
 export const isUser = (o: any): o is User => {
-  return "userName" in o && "publicKey" in o && "active" in o;
+  return o && "userName" in o && "publicKey" in o && "active" in o;
 };
 
 export interface Group {
@@ -26,7 +26,7 @@ export interface Group {
 }
 
 export const isGroup = (o: any): o is Group => {
-  return "groupName" in o && "members" in o;
+  return o && "groupName" in o && "members" in o;
 };
 
 export interface Message {
@@ -41,6 +41,7 @@ export interface Message {
 
 export const isMessage = (o: any): o is Message => {
   return (
+    o &&
     "timestamp" in o &&
     "id" in o &&
     "type" in o &&
@@ -53,10 +54,11 @@ export const isMessage = (o: any): o is Message => {
 export interface Contact {
   user: User | Group;
   messages: Message[];
+  unread: boolean;
 }
 
 export const isContact = (o: any): o is Contact => {
-  return "user" in o && "messages" in o;
+  return o && "user" in o && "messages" in o;
 };
 
 export interface FirebirdState {
@@ -147,6 +149,7 @@ export const FirebirdContextReducer = (
                 : contact.user.publicKey,
               active: action.payload.active,
             },
+            unread: false,
           };
         } else if (
           isGroup(contact.user) &&
@@ -158,6 +161,7 @@ export const FirebirdContextReducer = (
               ...contact.user,
               members: [...action.payload.members],
             },
+            unread: false,
           };
         } else {
           return contact;
