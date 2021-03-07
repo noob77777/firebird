@@ -173,7 +173,7 @@ const Login = (): JSX.Element => {
                   className={styles.submitbtn + " btn"}
                   onClick={onSignIn}
                 >
-                  Sign In
+                  Login
                 </button>
               </div>
               <div className="col m3 s4 center">
@@ -181,7 +181,7 @@ const Login = (): JSX.Element => {
                   className={styles.submitbtn + " btn"}
                   onClick={onSignUp}
                 >
-                  Sign Up
+                  Join
                 </button>
               </div>
             </div>

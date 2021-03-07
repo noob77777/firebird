@@ -1,6 +1,16 @@
 @import "../../../common.module.scss";
 
 .Contacts {
+  height: 75vh;
+
+  @media screen and (max-width: 992px){
+    height: 85vh;
+  }
+
+  @media screen and (max-width: 600px) {
+    height: 75vh;
+  }
+
   /* label color */
   :global(.input-field label) {
     color: $dark-red;
@@ -38,9 +48,6 @@
     color: $dark-red;
   }
 
-  .search {
-    margin-bottom: 0;
-  }
   :global(.btn) {
     background-color: $dark-red !important;
   }
@@ -53,27 +60,44 @@
     padding-left: 5px;
   }
 
+  .r1 {
+    height: 10vh;
+    // border: solid red 2px;
+    // outline: solid blue 2px;
+    margin-bottom: 0;
+    .search {
+      margin-bottom: 0;
+    }
+  }
+
+  .r2 {
+    margin-top: 0;
+    // border: solid red 2px; 
+    height: 10vh;
+  }
+
   .list {
-    max-height: 60vh;
+    height: 45vh;
+    max-height: 45vh;
+    width: 100%;
     overflow-y: scroll;
     scrollbar-width: 0;
-    @media screen and (min-width: 600px) {
+    @media screen and (max-width: 992px) {
+      max-height: 55vh;
       height: 55vh;
+    }
+    .vh60 {
+      height: 100%;
+      text-align: center;
+      color: $dark-red;
+      .ncpfcenter {
+        width: 100%;
+      }
     }
   }
 
-  .vh60 {
-    height: 60vh;
-    text-align: center;
-    color: $dark-red;
-    @media screen and (min-width: 600px) {
-      height: 55vh;
-    }
-  }
 
-  .ncpfcenter {
-    width: 100%;
-  }
+
 
   .ContactView {
     :global(.btn) {

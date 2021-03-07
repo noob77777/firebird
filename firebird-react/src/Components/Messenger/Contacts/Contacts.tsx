@@ -290,10 +290,9 @@ const Contacts = (props: any): JSX.Element => {
   };
 
   return (
-    <div className={styles.Contacts}>
-      <div className="row">
+    <div className={styles.Contacts + " row"}>
         <div className="col s12">
-          <div className="row">
+          <div className={styles.r1 + " row"}>
             <div className="col s12 m10 offset-m1 input-field">
               <i className="material-icons prefix">search</i>
               <input
@@ -308,7 +307,7 @@ const Contacts = (props: any): JSX.Element => {
               <label htmlFor={props.name}>Search or add new contacts</label>
             </div>
           </div>
-          <div className={styles.borderbtm + " row"}>
+          <div className={styles.r2 + " row"}>
             <div className="col s12 m10 offset-m1">
               <div className="row">
                 <div className="col s4 center">
@@ -365,7 +364,6 @@ const Contacts = (props: any): JSX.Element => {
           </ul>
         </div>
       </div>
-    </div>
   );
 };
 

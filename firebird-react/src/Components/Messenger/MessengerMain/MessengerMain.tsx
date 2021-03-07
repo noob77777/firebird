@@ -20,7 +20,7 @@ import {
   MESSAGE_SENT,
   RECV_MESSAGE,
   SEND_MESSAGE,
-  SOCKET_IP,
+  FIREBIRD_SERVER,
   TYPE_IMAGE,
   TYPE_TEXT,
   USER_PREFIX,
@@ -31,7 +31,7 @@ import ActionTypes from "../../../FirebirdContext/ActionTypes";
 import crypto from "crypto";
 import NodeRSA from "node-rsa";
 
-const socket = io(SOCKET_IP);
+const socket = io(FIREBIRD_SERVER, {transports: ['websocket']});
 
 const decrypt = (message: Message, privateKey: string | null): Message => {
   if (message.receiver.startsWith(GROUP_PREFIX) || message.type !== TYPE_TEXT) {
@@ -377,8 +377,9 @@ const MessengerMain = (): JSX.Element => {
       ) : (
         ""
       )}
-      <div className="row">
+
         {userPresent ? (
+          <div className={styles.messageList + " row"}>
           <div id="scrolldiv" className={styles.scroll + " col s12"}>
             {distinct(
               state.contacts.filter((contact) => {
@@ -398,7 +399,9 @@ const MessengerMain = (): JSX.Element => {
               })[0].messages
             ).map(MessageView)}
           </div>
+          </div>
         ) : (
+          <div className="row">
           <div
             className={styles.empty + " col s12 valign-wrapper center-align"}
           >
@@ -406,8 +409,9 @@ const MessengerMain = (): JSX.Element => {
               <h6>No contact selected.</h6>
             </div>
           </div>
+          </div>
         )}
-      </div>
+      
       {userPresent ? (
         <div className={styles.input + " row"}>
           <div className="col s12">
