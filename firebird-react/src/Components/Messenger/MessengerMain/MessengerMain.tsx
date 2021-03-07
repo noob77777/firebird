@@ -1,5 +1,4 @@
 import { useContext, useEffect, useState } from "react";
-import io from "socket.io-client";
 import FirebirdContext, {
   Message,
   Contact,
@@ -20,7 +19,6 @@ import {
   MESSAGE_SENT,
   RECV_MESSAGE,
   SEND_MESSAGE,
-  FIREBIRD_SERVER,
   TYPE_IMAGE,
   TYPE_TEXT,
   USER_PREFIX,
@@ -28,10 +26,9 @@ import {
   USER_STATE_CHANGE,
 } from "../../../constants";
 import ActionTypes from "../../../FirebirdContext/ActionTypes";
+import { socket } from "../../../Socket/Socket";
 import crypto from "crypto";
 import NodeRSA from "node-rsa";
-
-const socket = io(FIREBIRD_SERVER, { transports: ["websocket"] });
 
 const decrypt = (message: Message, privateKey: string | null): Message => {
   if (message.receiver.startsWith(GROUP_PREFIX) || message.type !== TYPE_TEXT) {
